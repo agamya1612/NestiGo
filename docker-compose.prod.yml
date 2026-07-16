@@ -1,0 +1,193 @@
+version: '3.8'
+
+services:
+  # Infrastructure
+  postgres:
+    image: supabase/postgres:15.14.1.148
+    container_name: nestigo-postgres-prod
+    env_file:
+      - .env
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/z-init.sql
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: nestigo-redis-prod
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: nestigo-zookeeper-prod
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: nestigo-kafka-prod
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  # Microservices
+  api-gateway:
+    build:
+      context: .
+      args:
+        APP_NAME: api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - order-service
+      - payment-service
+      - catalog-service
+      - user-service
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  websocket-service:
+    build:
+      context: .
+      args:
+        APP_NAME: websocket-service
+    container_name: websocket-service
+    ports:
+      - "3005:3005"
+    env_file:
+      - .env
+    depends_on:
+      - kafka
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  order-service:
+    build:
+      context: .
+      args:
+        APP_NAME: order-service
+    container_name: order-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  payment-service:
+    build:
+      context: .
+      args:
+        APP_NAME: payment-service
+    container_name: payment-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  catalog-service:
+    build:
+      context: .
+      args:
+        APP_NAME: catalog-service
+    container_name: catalog-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  user-service:
+    build:
+      context: .
+      args:
+        APP_NAME: user-service
+    container_name: user-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  dispatch-service:
+    build:
+      context: .
+      args:
+        APP_NAME: dispatch-service
+    container_name: dispatch-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  notification-service:
+    build:
+      context: .
+      args:
+        APP_NAME: notification-service
+    container_name: notification-service
+    env_file:
+      - .env
+    depends_on:
+      - kafka
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  gotrue:
+    image: supabase/gotrue:v2.132.3
+    container_name: nestigo-gotrue
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+networks:
+  nestigo_net:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
