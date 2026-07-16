@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NestiGo Test Frontend</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .log { background: #eee; padding: 10px; height: 200px; overflow-y: auto; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>NestiGo Backend Test UI</h1>
+  <button id="btnFetch">1. Fetch Catalog</button>
+  <button id="btnOrder" disabled>2. Create Order</button>
+  <button id="btnPay" disabled>3. Simulate Payment Webhook</button>
+  
+  <h3>Logs:</h3>
+  <div id="logs" class="log"></div>
+
+  <script>
+    const log = (msg) => {
+      const el = document.getElementById('logs');
+      el.innerHTML += `<div>${msg}</div>`;
+      el.scrollTop = el.scrollHeight;
+    };
+
+    const token = 'Bearer mock-token';
+    let currentOrderId = null;
+    let catalogItem = null;
+    let socket = null;
+
+    document.getElementById('btnFetch').onclick = async () => {
+      try {
+        log('Fetching catalog...');
+        const res = await fetch('/api/catalog/service');
+        const data = await res.json();
+        catalogItem = data.items[0];
+        log(`Fetched item: ${catalogItem.name}`);
+        document.getElementById('btnOrder').disabled = false;
+      } catch (err) {
+        log('Error fetching catalog: ' + err.message);
+      }
+    };
+
+    document.getElementById('btnOrder').onclick = async () => {
+      try {
+        log('Creating order...');
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': token },
+          body: JSON.stringify({
+            customer_id: '11111111-1111-1111-1111-111111111111',
+            items: [{ id: catalogItem.id, quantity: 1 }],
+            address: { lat: 12.901, lng: 77.501 }
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          currentOrderId = data.order.id;
+          log(`Order created: ${currentOrderId}`);
+          document.getElementById('btnPay').disabled = false;
+          connectWebSocket(currentOrderId);
+        } else {
+          log('Error creating order: ' + JSON.stringify(data));
+        }
+      } catch (err) {
+        log('Error creating order: ' + err.message);
+      }
+    };
+
+    const connectWebSocket = (orderId) => {
+      socket = io('http://localhost:3005');
+      socket.on('connect', () => {
+        log('Connected to WebSocket!');
+        socket.emit('subscribe_order', orderId);
+        log('Subscribed to updates for order ' + orderId);
+      });
+      socket.on('order_update', (msg) => {
+        log(`[LIVE UPDATE] ${msg.eventType}: ${JSON.stringify(msg.payload)}`);
+      });
+    };
+
+    document.getElementById('btnPay').onclick = async () => {
+      try {
+        log('Sending webhook...');
+        const res = await fetch('/api/payments/webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'payment.captured',
+            payload: { payment: { entity: { id: 'test_pay', amount: 500, currency: 'INR', notes: { order_id: currentOrderId } } } }
+          })
+        });
+        const data = await res.json();
+        log('Webhook response: ' + JSON.stringify(data));
+      } catch (err) {
+        log('Error sending webhook: ' + err.message);
+      }
+    };
+  </script>
+</body>
+</html>
