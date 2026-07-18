@@ -273,6 +273,20 @@ services:
     networks:
       - nestigo_net
 
+  admin-service:
+    build:
+      context: .
+      args:
+        APP_NAME: admin-service
+    container_name: admin-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
 networks:
   nestigo_net:
     driver: bridge

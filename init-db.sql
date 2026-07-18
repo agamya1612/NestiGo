@@ -532,5 +532,41 @@ create policy "Service role manages messages" on public.messages for all using (
 alter table public.audit_logs enable row level security;
 create policy "Service role manages audit logs" on public.audit_logs for all using (true);
 
+-- Insert Admin Mock Data for Testing
+INSERT INTO auth.users (id, email) VALUES ('33333333-3333-3333-3333-333333333333', 'admin@nestigo.com') ON CONFLICT DO NOTHING;
+INSERT INTO public.admin_roles (user_id, role) VALUES ('33333333-3333-3333-3333-333333333333', 'ops_admin') ON CONFLICT DO NOTHING;
+
 alter table public.reviews enable row level security;
 create policy "Service role manages reviews" on public.reviews for all using (true);
+
+-- Inventory Table (For Retail, Pharma, Bakery)
+create table public.inventory (
+    id uuid default gen_random_uuid() primary key,
+    catalog_item_id uuid references public.catalog_items(id) on delete cascade not null,
+    location_id uuid not null,
+    stock_qty int not null default 0 check (stock_qty >= 0),
+    updated_at timestamptz default now() not null,
+    unique(catalog_item_id, location_id)
+);
+
+alter table public.inventory enable row level security;
+create policy "Service role manages inventory" on public.inventory for all using (true);
+
+-- Insert Pharma Category
+INSERT INTO public.categories (id, vertical_type, name, slug, requires_prescription) 
+VALUES ('66666666-6666-6666-6666-666666666666', 'pharma', 'Pharmacy', 'pharma', true)
+ON CONFLICT DO NOTHING;
+
+-- Insert Pharma Catalog Items
+INSERT INTO public.catalog_items (id, category_id, name, description, price, unit, requires_prescription, active)
+VALUES 
+  ('77777777-7777-7777-7777-777777777771', '66666666-6666-6666-6666-666666666666', 'Paracetamol 500mg', 'Strip of 10 tablets', 50, 'strip', false, true),
+  ('77777777-7777-7777-7777-777777777772', '66666666-6666-6666-6666-666666666666', 'Amoxicillin 250mg', 'Antibiotic, Strip of 10 tablets', 120, 'strip', true, true)
+ON CONFLICT DO NOTHING;
+
+-- Insert Mock Inventory for Pharma Items at Mock Location '8888...'
+INSERT INTO public.inventory (catalog_item_id, location_id, stock_qty)
+VALUES
+  ('77777777-7777-7777-7777-777777777771', '88888888-8888-8888-8888-888888888888', 100),
+  ('77777777-7777-7777-7777-777777777772', '88888888-8888-8888-8888-888888888888', 50)
+ON CONFLICT DO NOTHING;

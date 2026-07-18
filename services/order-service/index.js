@@ -16,11 +16,15 @@ app.post('/api/orders', async (req, res) => {
   // 1. Calculate total amount and validate items
   let amount_total = 0;
   const validatedItems = [];
+  let requires_prescription = false;
   
   for (const item of items) {
-     const dbItem = await query(`SELECT price FROM catalog_items WHERE id = $1`, [item.id]);
+     const dbItem = await query(`SELECT price, requires_prescription FROM catalog_items WHERE id = $1`, [item.id]);
      if (dbItem.rows.length === 0) {
         return res.status(400).json({ error: `Item with id ${item.id} not found` });
+     }
+     if (dbItem.rows[0].requires_prescription) {
+         requires_prescription = true;
      }
      const unit_price = Number(dbItem.rows[0].price);
      amount_total += unit_price * item.quantity;
@@ -32,10 +36,11 @@ app.post('/api/orders', async (req, res) => {
     await client.query('BEGIN');
     
     // 2. Persist Order to Database
+    const prescription_status = requires_prescription ? 'pending' : 'n/a';
     const result = await client.query(
-      `INSERT INTO orders (customer_id, order_type, address, amount_total, status) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING id, status, amount_total, created_at`,
-      [customer_id, 'service', JSON.stringify(address), amount_total, 'pending_payment']
+      `INSERT INTO orders (customer_id, order_type, address, amount_total, status, prescription_status) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, status, amount_total, created_at, prescription_status`,
+      [customer_id, 'service', JSON.stringify(address), amount_total, 'pending_payment', prescription_status]
     );
 
     const order = result.rows[0];

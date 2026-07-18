@@ -61,9 +61,11 @@ app.use('/api/pricing', requireAuth, createProxyMiddleware(proxyOptions(process.
 app.use('/api/kyc', requireAuth, createProxyMiddleware(proxyOptions(process.env.KYC_SERVICE_URL || 'http://localhost:3008')));
 app.use('/api/reviews', requireAuth, createProxyMiddleware(proxyOptions(process.env.REVIEW_SERVICE_URL || 'http://localhost:3010')));
 app.use('/api/dispatch', requireAuth, createProxyMiddleware(proxyOptions(process.env.DISPATCH_SERVICE_URL || 'http://localhost:3004')));
+app.use('/api/admin', requireAuth, createProxyMiddleware(proxyOptions(process.env.ADMIN_SERVICE_URL || 'http://localhost:3013')));
 
 // Public Routes
 app.use('/api/catalog', createProxyMiddleware(proxyOptions(process.env.CATALOG_SERVICE_URL || 'http://localhost:3003')));
+app.use('/api/inventory', createProxyMiddleware(proxyOptions(process.env.CATALOG_SERVICE_URL || 'http://localhost:3003')));
 app.use('/api/payments', createProxyMiddleware(proxyOptions(process.env.PAYMENT_SERVICE_URL || 'http://localhost:3002')));
 
 // Auth Route (proxies directly to GoTrue)
