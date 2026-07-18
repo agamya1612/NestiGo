@@ -1,4 +1,4 @@
-# NestiGo 🚀
+# NestiGo 
 
 NestiGo is an enterprise-grade, highly scalable, and event-driven microservices architecture built for a delivery and ordering platform. 
 
