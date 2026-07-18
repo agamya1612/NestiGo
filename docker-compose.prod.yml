@@ -5,6 +5,7 @@ services:
   postgres:
     image: supabase/postgres:15.14.1.148
     container_name: nestigo-postgres-prod
+    command: postgres -D /etc/postgresql -c max_connections=1000
     env_file:
       - .env
     volumes:
@@ -177,6 +178,93 @@ services:
   gotrue:
     image: supabase/gotrue:v2.132.3
     container_name: nestigo-gotrue
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  ledger-service:
+    build:
+      context: .
+      args:
+        APP_NAME: ledger-service
+    container_name: ledger-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  pricing-service:
+    build:
+      context: .
+      args:
+        APP_NAME: pricing-service
+    container_name: pricing-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  kyc-service:
+    build:
+      context: .
+      args:
+        APP_NAME: kyc-service
+    container_name: kyc-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  chat-service:
+    build:
+      context: .
+      args:
+        APP_NAME: chat-service
+    container_name: chat-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  audit-service:
+    build:
+      context: .
+      args:
+        APP_NAME: audit-service
+    container_name: audit-service
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - kafka
+    restart: unless-stopped
+    networks:
+      - nestigo_net
+
+  review-service:
+    build:
+      context: .
+      args:
+        APP_NAME: review-service
+    container_name: review-service
     env_file:
       - .env
     depends_on:
