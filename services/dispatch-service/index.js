@@ -1,6 +1,27 @@
+const express = require('express');
 const { query } = require('../shared/db');
 const { connectProducer, publishEvent, createConsumer } = require('../shared/kafka');
 const { redis } = require('../shared/redis');
+
+const app = express();
+app.use(express.json());
+
+app.post('/api/dispatch/location', async (req, res) => {
+  const provider_id = req.headers['x-user-id']; // Or get from provider_profiles based on user_id
+  const { lng, lat } = req.body;
+  if (!provider_id || !lng || !lat) return res.status(400).json({ error: 'Missing fields' });
+
+  try {
+     // Ideally get provider ID from user ID here
+     const pRes = await query('SELECT id FROM provider_profiles WHERE user_id = $1', [provider_id]);
+     if (pRes.rows.length === 0) return res.status(403).json({ error: 'Not a provider' });
+     
+     await redis.geoadd('active_providers', lng, lat, pRes.rows[0].id);
+     res.json({ message: 'Location updated' });
+  } catch(err) {
+     res.status(500).json({ error: 'Internal Error' });
+  }
+});
 
 const handlePaymentCaptured = async (payload) => {
   const { order_id } = payload;
@@ -91,6 +112,10 @@ const startService = async () => {
     });
 
     console.log('[Dispatch Service] Listening for events on "payments" topic');
+    
+    app.listen(3004, () => {
+      console.log('[Dispatch Service] HTTP Server listening on port 3004');
+    });
   } catch (err) {
     console.error('Failed to start Dispatch Service:', err);
   }

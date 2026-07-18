@@ -68,6 +68,106 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
+app.get('/api/orders', async (req, res) => {
+  const user_id = req.headers['x-user-id'];
+  if (!user_id) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Extremely basic auth check for admin vs worker vs customer
+  // In a real app we would check `admin_roles` table
+  const client = await pool.connect();
+  try {
+    const isWorker = await client.query('SELECT id FROM provider_profiles WHERE user_id = $1', [user_id]);
+    
+    if (isWorker.rows.length > 0) {
+       // Return worker's assigned orders
+       const orders = await client.query(`
+         SELECT o.* FROM orders o 
+         JOIN provider_assignments pa ON o.id = pa.order_id 
+         WHERE pa.provider_id = $1
+       `, [isWorker.rows[0].id]);
+       return res.json({ orders: orders.rows });
+    }
+
+    // Customer's orders
+    const orders = await client.query('SELECT * FROM orders WHERE customer_id = $1', [user_id]);
+    res.json({ orders: orders.rows });
+  } catch(err) {
+    res.status(500).json({ error: 'Internal error' });
+  } finally {
+    client.release();
+  }
+});
+
+app.put('/api/orders/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const updateRes = await client.query(
+       `UPDATE orders SET status = $1, updated_at = now() WHERE id = $2 RETURNING customer_id, amount_total`,
+       [status, id]
+    );
+    if (updateRes.rows.length > 0) {
+       await client.query(`INSERT INTO order_status_history (order_id, status) VALUES ($1, $2)`, [id, status]);
+       
+       if (status === 'completed') {
+          await publishEvent('orders', 'order.completed', {
+            order_id: id,
+            customer_id: updateRes.rows[0].customer_id,
+            amount_total: updateRes.rows[0].amount_total
+          });
+       }
+    }
+    await client.query('COMMIT');
+    res.json({ message: 'Order status updated' });
+  } catch(err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: 'Internal error' });
+  } finally {
+    client.release();
+  }
+});
+
+app.post('/api/orders/:id/cancel', async (req, res) => {
+  const { id } = req.params;
+  const user_id = req.headers['x-user-id'];
+  
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    const checkRes = await client.query(`SELECT status, customer_id FROM orders WHERE id = $1`, [id]);
+    if (checkRes.rows.length === 0 || checkRes.rows[0].customer_id !== user_id) {
+       await client.query('ROLLBACK');
+       return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    if (['completed', 'cancelled', 'refunded'].includes(checkRes.rows[0].status)) {
+       await client.query('ROLLBACK');
+       return res.status(400).json({ error: 'Order cannot be cancelled' });
+    }
+
+    await client.query(`UPDATE orders SET status = 'cancelled' WHERE id = $1`, [id]);
+    await client.query(`INSERT INTO order_status_history (order_id, status) VALUES ($1, 'cancelled')`, [id]);
+    
+    await client.query('COMMIT');
+    
+    await publishEvent('payments', 'payment.refund.requested', {
+      order_id: id,
+      reason: 'Customer cancelled'
+    });
+    
+    res.json({ message: 'Order cancelled, refund requested' });
+  } catch(err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: 'Internal error' });
+  } finally {
+    client.release();
+  }
+});
+
 const startServer = async () => {
   try {
     await connectProducer();
