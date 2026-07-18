@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const http = require('http');
+
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 200, keepAliveMsecs: 5000 });
 
 const app = express();
 app.use(cors());
@@ -40,6 +43,7 @@ app.use((req, res, next) => {
 const proxyOptions = (targetUrl) => ({
   target: targetUrl,
   changeOrigin: true,
+  agent: httpAgent,
   pathRewrite: (path, req) => req.originalUrl,
   onError: (err, req, res) => {
     console.error(`[API Gateway] Proxy Error to ${targetUrl}:`, err.message);
@@ -51,10 +55,16 @@ const proxyOptions = (targetUrl) => ({
 
 // Protected Routes
 app.use('/api/orders', requireAuth, createProxyMiddleware(proxyOptions(process.env.ORDER_SERVICE_URL || 'http://localhost:3001')));
-app.use('/api/users', requireAuth, createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'http://localhost:3004')));
+app.use('/api/users', requireAuth, createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'http://localhost:3012')));
+app.use('/api/ledger', requireAuth, createProxyMiddleware(proxyOptions(process.env.LEDGER_SERVICE_URL || 'http://localhost:3006')));
+app.use('/api/pricing', requireAuth, createProxyMiddleware(proxyOptions(process.env.PRICING_SERVICE_URL || 'http://localhost:3007')));
+app.use('/api/kyc', requireAuth, createProxyMiddleware(proxyOptions(process.env.KYC_SERVICE_URL || 'http://localhost:3008')));
+app.use('/api/reviews', requireAuth, createProxyMiddleware(proxyOptions(process.env.REVIEW_SERVICE_URL || 'http://localhost:3010')));
+app.use('/api/dispatch', requireAuth, createProxyMiddleware(proxyOptions(process.env.DISPATCH_SERVICE_URL || 'http://localhost:3004')));
 
 // Public Routes
 app.use('/api/catalog', createProxyMiddleware(proxyOptions(process.env.CATALOG_SERVICE_URL || 'http://localhost:3003')));
+app.use('/api/payments', createProxyMiddleware(proxyOptions(process.env.PAYMENT_SERVICE_URL || 'http://localhost:3002')));
 
 // Auth Route (proxies directly to GoTrue)
 app.use('/auth', async (req, res) => {
@@ -99,9 +109,6 @@ app.use('/auth', async (req, res) => {
     res.status(502).json({ error: 'GoTrue Unavailable' });
   }
 });
-
-// Payment Webhook (Public, verified internally by signature)
-app.use('/api/payments', createProxyMiddleware(proxyOptions(process.env.PAYMENT_SERVICE_URL || 'http://localhost:3002')));
 
 app.listen(3000, () => {
   console.log('[API Gateway] Listening on port 3000');
