@@ -403,3 +403,134 @@ VALUES
   ('55555555-5555-5555-5555-555555555551', '33333333-3333-3333-3333-333333333333', 'Chocolate Cake', 'Half kg chocolate truffle', 500, 'item', true),
   ('55555555-5555-5555-5555-555555555552', '33333333-3333-3333-3333-333333333333', 'Black Forest Cake', 'Half kg black forest', 450, 'item', true)
 ON CONFLICT DO NOTHING;
+
+-- Refunds
+create table public.refunds (
+    id uuid default gen_random_uuid() primary key,
+    order_id uuid references public.orders(id) on delete cascade not null,
+    amount numeric(10, 2) not null check (amount >= 0),
+    status text default 'pending' check (status in ('pending', 'completed', 'failed')),
+    reason text not null,
+    created_at timestamptz default now() not null
+);
+
+-- Settlements
+create table public.settlements (
+    id uuid default gen_random_uuid() primary key,
+    provider_id uuid references public.provider_profiles(id) on delete restrict not null,
+    order_id uuid references public.orders(id) on delete cascade not null,
+    amount numeric(10, 2) not null check (amount >= 0),
+    status text default 'pending' check (status in ('pending', 'processed')),
+    created_at timestamptz default now() not null
+);
+
+-- Wallets (Ledger Service)
+create table public.wallets (
+    id uuid default gen_random_uuid() primary key,
+    user_id uuid references auth.users(id) on delete cascade not null unique,
+    balance numeric(10, 2) default 0.0 not null,
+    currency text default 'INR' not null,
+    created_at timestamptz default now() not null,
+    updated_at timestamptz default now() not null
+);
+
+create table public.ledger_transactions (
+    id uuid default gen_random_uuid() primary key,
+    wallet_id uuid references public.wallets(id) on delete cascade not null,
+    amount numeric(10, 2) not null, -- positive for credit, negative for debit
+    reference_type text not null, -- e.g., 'settlement', 'refund', 'deposit', 'withdrawal'
+    reference_id text not null,
+    created_at timestamptz default now() not null
+);
+
+-- Promotions (Pricing Service)
+create table public.promotions (
+    id uuid default gen_random_uuid() primary key,
+    code text unique not null,
+    discount_percentage numeric(5, 2) check (discount_percentage >= 0 and discount_percentage <= 100),
+    max_discount_amount numeric(10, 2),
+    active boolean default true not null,
+    expires_at timestamptz,
+    created_at timestamptz default now() not null
+);
+
+-- Provider KYC (KYC Service)
+create table public.provider_kyc (
+    id uuid default gen_random_uuid() primary key,
+    provider_id uuid references public.provider_profiles(id) on delete cascade not null,
+    document_type text not null, -- e.g., 'aadhar', 'pan', 'driving_license'
+    document_url text not null,
+    verification_status text default 'pending' check (verification_status in ('pending', 'verified', 'rejected')),
+    verified_by uuid references auth.users(id),
+    created_at timestamptz default now() not null,
+    updated_at timestamptz default now() not null
+);
+
+-- Chat & Messages (Chat Service)
+create table public.chat_rooms (
+    id uuid default gen_random_uuid() primary key,
+    order_id uuid references public.orders(id) on delete cascade not null unique,
+    customer_id uuid references auth.users(id) on delete cascade not null,
+    provider_id uuid references public.provider_profiles(id) on delete cascade not null,
+    active boolean default true not null,
+    created_at timestamptz default now() not null
+);
+
+create table public.messages (
+    id uuid default gen_random_uuid() primary key,
+    room_id uuid references public.chat_rooms(id) on delete cascade not null,
+    sender_id uuid references auth.users(id) on delete cascade not null,
+    content text not null,
+    created_at timestamptz default now() not null
+);
+
+-- Audit Logs (Audit Service)
+create table public.audit_logs (
+    id uuid default gen_random_uuid() primary key,
+    topic text not null,
+    event_type text not null,
+    payload jsonb not null,
+    created_at timestamptz default now() not null
+);
+
+-- Reviews (Review Service)
+create table public.reviews (
+    id uuid default gen_random_uuid() primary key,
+    order_id uuid references public.orders(id) on delete cascade not null unique,
+    customer_id uuid references auth.users(id) on delete cascade not null,
+    provider_id uuid references public.provider_profiles(id) on delete cascade not null,
+    rating int not null check (rating >= 1 and rating <= 5),
+    comment text,
+    created_at timestamptz default now() not null
+);
+
+-- Enable RLS on new tables (Allow service role full access for now)
+alter table public.refunds enable row level security;
+create policy "Service role manages refunds" on public.refunds for all using (true);
+
+alter table public.settlements enable row level security;
+create policy "Service role manages settlements" on public.settlements for all using (true);
+
+alter table public.wallets enable row level security;
+create policy "Service role manages wallets" on public.wallets for all using (true);
+
+alter table public.ledger_transactions enable row level security;
+create policy "Service role manages ledger" on public.ledger_transactions for all using (true);
+
+alter table public.promotions enable row level security;
+create policy "Service role manages promotions" on public.promotions for all using (true);
+
+alter table public.provider_kyc enable row level security;
+create policy "Service role manages kyc" on public.provider_kyc for all using (true);
+
+alter table public.chat_rooms enable row level security;
+create policy "Service role manages chat rooms" on public.chat_rooms for all using (true);
+
+alter table public.messages enable row level security;
+create policy "Service role manages messages" on public.messages for all using (true);
+
+alter table public.audit_logs enable row level security;
+create policy "Service role manages audit logs" on public.audit_logs for all using (true);
+
+alter table public.reviews enable row level security;
+create policy "Service role manages reviews" on public.reviews for all using (true);
