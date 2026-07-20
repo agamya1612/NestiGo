@@ -83,5 +83,4 @@ npm run test:all
 ```
 You can view the full test reports inside `docs/reports/`.
 
-## 📜 Documentation
-For a deeper dive into the exact functional requirements, database schema design, Kafka topic topology, and real-time workflows, refer to the [nestigo-requirements-architecture.md](./nestigo-requirements-architecture.md).
+
