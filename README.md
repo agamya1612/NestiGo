@@ -51,9 +51,9 @@ The system leverages the **Saga Pattern** for distributed transactions, ensuring
 
 ## 🧪 Comprehensive Testing Suite
 
-NestiGo includes a rigorous suite of automated integration, stress, and security tests located in the `tests/` directory.
+NestiGo includes a rigorous suite of automated integration, stress, and security tests located in the `tests/` and `stress-tests/` directories.
 
-To run the evaluation suites:
+To run the functional evaluation suites:
 1. Ensure the cluster is fully running and healthy.
 2. Run the tests using Node:
 
@@ -70,6 +70,18 @@ node tests/test-robustness.js
 # Attempts SQL injections, API Gateway Bypasses, Geospatial Poisoning, and Kafka Poison Pills.
 node tests/test-red-team.js
 ```
+
+### 🌪️ Chaos Engineering & Load Testing
+NestiGo has been formally stress-tested up to **5,000 Concurrent Virtual Users** while simultaneously enduring random container outages to test resilience.
+
+To reproduce the Chaos run:
+```bash
+cd stress-tests
+npm install
+# Run Chaos and K6 concurrently:
+npm run test:all
+```
+You can view the full test reports inside `docs/reports/`.
 
 ## 📜 Documentation
 For a deeper dive into the exact functional requirements, database schema design, Kafka topic topology, and real-time workflows, refer to the [nestigo-requirements-architecture.md](./nestigo-requirements-architecture.md).

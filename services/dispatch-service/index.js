@@ -118,6 +118,7 @@ const startService = async () => {
     });
   } catch (err) {
     console.error('Failed to start Dispatch Service:', err);
+    process.exit(1);
   }
 };
 
