@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { LoginPage } from "./components/LoginPage";
-import { CustomerPortal } from "./components/customer/CustomerPortal";
-import { ProviderPortal } from "./components/provider/ProviderPortal";
-import { DriverPortal } from "./components/driver/DriverPortal";
-import { AdminPortal } from "./components/admin/AdminPortal";
-import { SupportPortal } from "./components/support/SupportPortal";
+
+const CustomerPortal = lazy(() => import("./components/customer/CustomerPortal").then(m => ({ default: m.CustomerPortal })));
+const ProviderPortal = lazy(() => import("./components/provider/ProviderPortal").then(m => ({ default: m.ProviderPortal })));
+const DriverPortal = lazy(() => import("./components/driver/DriverPortal").then(m => ({ default: m.DriverPortal })));
+const AdminPortal = lazy(() => import("./components/admin/AdminPortal").then(m => ({ default: m.AdminPortal })));
+const SupportPortal = lazy(() => import("./components/support/SupportPortal").then(m => ({ default: m.SupportPortal })));
 
 type Portal = "customer" | "provider" | "driver" | "admin" | "support" | null;
 
@@ -23,11 +24,13 @@ export default function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  if (activePortal === "customer") return <CustomerPortal onLogout={handleLogout} />;
-  if (activePortal === "provider") return <ProviderPortal onLogout={handleLogout} />;
-  if (activePortal === "driver") return <DriverPortal onLogout={handleLogout} />;
-  if (activePortal === "admin") return <AdminPortal onLogout={handleLogout} />;
-  if (activePortal === "support") return <SupportPortal onLogout={handleLogout} />;
-
-  return null;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-slate-400">Loading portal...</div>}>
+      {activePortal === "customer" && <CustomerPortal onLogout={handleLogout} />}
+      {activePortal === "provider" && <ProviderPortal onLogout={handleLogout} />}
+      {activePortal === "driver" && <DriverPortal onLogout={handleLogout} />}
+      {activePortal === "admin" && <AdminPortal onLogout={handleLogout} />}
+      {activePortal === "support" && <SupportPortal onLogout={handleLogout} />}
+    </Suspense>
+  );
 }

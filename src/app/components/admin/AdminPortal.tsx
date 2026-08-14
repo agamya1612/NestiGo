@@ -2,13 +2,27 @@ import { useState } from "react";
 import {
   Package, FileText, LayoutDashboard, BookOpen, Map, BarChart3,
   TrendingUp, Users, CheckCircle2, XCircle, Edit3, Plus, Search,
-  ShieldCheck, AlertTriangle, ChevronDown, X
+  ShieldCheck, AlertTriangle, ChevronDown, X, ClipboardCheck, Camera
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend
 } from "recharts";
 import { PortalShell } from "../PortalShell";
+
+// Shadcn UI Components
+import { Button } from "@/app/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card";
+import { Input } from "@/app/components/ui/input";
+import { Badge } from "@/app/components/ui/badge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/app/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/app/components/ui/dialog";
+import { Switch } from "@/app/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/app/components/ui/tabs";
+import { Separator } from "@/app/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
+import { Label } from "@/app/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
 
 const VERTICAL_COLOR: Record<string, string> = {
   service:    "#7C3AED",
@@ -19,13 +33,13 @@ const VERTICAL_COLOR: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  pending_payment: "text-amber-400 bg-amber-400/10 border-amber-400/20",
-  paid: "text-blue-400 bg-blue-400/10 border-blue-400/20",
-  confirmed: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
-  picked_up: "text-violet-400 bg-violet-400/10 border-violet-400/20",
-  completed: "text-green-400 bg-green-400/10 border-green-400/20",
-  cancelled: "text-red-400 bg-red-400/10 border-red-400/20",
-  refunded: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+  pending_payment: "text-warning bg-warning/10 border-warning/20",
+  paid: "text-info bg-info/10 border-info/20",
+  confirmed: "text-info bg-info/10 border-info/20",
+  picked_up: "text-primary bg-primary/10 border-primary/20",
+  completed: "text-success bg-success/10 border-success/20",
+  cancelled: "text-destructive bg-destructive/10 border-destructive/20",
+  refunded: "text-warning bg-warning/10 border-warning/20",
 };
 
 const revenueData = [
@@ -82,8 +96,7 @@ const cityMatrix = [
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`px-2 py-0.5 rounded-full border text-xs ${STATUS_STYLES[status] ?? ""}`}
-      style={{ fontFamily: "DM Sans", fontWeight: 500 }}>
+    <span className={`px-2 py-0.5 rounded-full border text-xs font-[family-name:var(--font-body)] font-medium ${STATUS_STYLES[status] ?? ""}`}>
       {status.replace(/_/g, " ")}
     </span>
   );
@@ -92,8 +105,8 @@ function StatusBadge({ status }: { status: string }) {
 function VerticalTag({ vertical }: { vertical: string }) {
   const color = VERTICAL_COLOR[vertical] ?? "#666";
   return (
-    <span className="px-2 py-0.5 rounded text-xs"
-      style={{ background: `${color}20`, color, fontFamily: "DM Sans", fontWeight: 500 }}>
+    <span className="px-2 py-0.5 rounded text-xs font-[family-name:var(--font-body)] font-medium"
+      style={{ background: `${color}20`, color }}>
       {vertical}
     </span>
   );
@@ -102,90 +115,113 @@ function VerticalTag({ vertical }: { vertical: string }) {
 // Analytics Dashboard
 function AnalyticsPage() {
   const tooltipStyle = {
-    backgroundColor: "#0F1830",
-    border: "1px solid rgba(255,255,255,0.1)",
+    backgroundColor: "var(--card)",
+    border: "1px solid var(--border)",
     borderRadius: "8px",
-    color: "#E4ECF7",
-    fontFamily: "DM Sans",
+    color: "var(--foreground)",
+    fontFamily: "var(--font-body)",
     fontSize: "12px",
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 page-enter">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-children">
         {[
-          { label: "Total Orders", value: "1,250", change: "+12.4%", color: "#FF6B00", icon: Package },
-          { label: "Gross Revenue", value: "₹4,50,250", change: "+18.2%", color: "#00D4AA", icon: TrendingUp },
-          { label: "Active Providers", value: "85", change: "+5", color: "#3B82F6", icon: Users },
-          { label: "Avg Order Value", value: "₹360", change: "+8.7%", color: "#8B5CF6", icon: BarChart3 },
+          { label: "Total Orders", value: "1,250", change: "+12.4%", color: "var(--accent)", icon: Package },
+          { label: "Gross Revenue", value: "₹4,50,250", change: "+18.2%", color: "var(--success)", icon: TrendingUp },
+          { label: "Active Providers", value: "85", change: "+5", color: "var(--info)", icon: Users },
+          { label: "Avg Order Value", value: "₹360", change: "+8.7%", color: "var(--primary)", icon: BarChart3 },
         ].map((kpi) => (
-          <div key={kpi.label} className="rounded-xl p-4" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <span style={{ color: "#6B7FA0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>{kpi.label}</span>
-              <kpi.icon className="w-4 h-4" style={{ color: kpi.color }} />
-            </div>
-            <p style={{ color: kpi.color, fontFamily: "Outfit", fontWeight: 800, fontSize: "1.3rem" }}>{kpi.value}</p>
-            <p style={{ color: "#00D4AA", fontSize: "0.72rem", fontFamily: "DM Sans", marginTop: "4px" }}>↑ {kpi.change} vs last month</p>
-          </div>
+          <Card key={kpi.label} className="hover-lift">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-muted-foreground font-[family-name:var(--font-body)]">{kpi.label}</span>
+                <kpi.icon className="w-4 h-4" style={{ color: kpi.color }} />
+              </div>
+              <p className="text-xl md:text-2xl font-bold font-[family-name:var(--font-heading)]" style={{ color: kpi.color }}>{kpi.value}</p>
+              <p className="text-xs text-success font-[family-name:var(--font-body)] mt-1">↑ {kpi.change} vs last month</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Revenue chart */}
-      <div className="rounded-xl p-5" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p style={{ color: "#E4ECF7", fontFamily: "Outfit", fontWeight: 700, marginBottom: "16px" }}>Revenue by Vertical (₹)</p>
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={revenueData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-            <XAxis dataKey="month" tick={{ fill: "#6B7FA0", fontSize: 11, fontFamily: "DM Sans" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "#6B7FA0", fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`, ""]} />
-            {Object.entries(VERTICAL_COLOR).map(([key, color]) => (
-              <Area key={key} type="monotone" dataKey={key} stackId="1" stroke={color} fill={`${color}30`} strokeWidth={1.5} />
-            ))}
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+      <Card className="hover-lift">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold font-[family-name:var(--font-heading)]">Revenue by Vertical (₹)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: "var(--muted-foreground)", fontSize: 11, fontFamily: "var(--font-body)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 10, fontFamily: "var(--font-mono)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+                <RechartsTooltip contentStyle={tooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`, ""]} />
+                {Object.entries(VERTICAL_COLOR).map(([key, color]) => (
+                  <Area key={key} type="monotone" dataKey={key} stackId="1" stroke={color} fill={`${color}30`} strokeWidth={1.5} />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 stagger-children">
         {/* Order volume */}
-        <div className="rounded-xl p-5" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p style={{ color: "#E4ECF7", fontFamily: "Outfit", fontWeight: 700, marginBottom: "16px" }}>Weekly Order Volume</p>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={orderVolumeData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="day" tick={{ fill: "#6B7FA0", fontSize: 11, fontFamily: "DM Sans" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#6B7FA0", fontSize: 10 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="orders" fill="#FF6B00" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <Card className="hover-lift">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold font-[family-name:var(--font-heading)]">Weekly Order Volume</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[200px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={orderVolumeData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                  <XAxis dataKey="day" tick={{ fill: "var(--muted-foreground)", fontSize: 11, fontFamily: "var(--font-body)" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <RechartsTooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="orders" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Vertical share */}
-        <div className="rounded-xl p-5" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p style={{ color: "#E4ECF7", fontFamily: "Outfit", fontWeight: 700, marginBottom: "16px" }}>Revenue by Vertical</p>
-          <div className="flex items-center gap-4">
-            <PieChart width={140} height={140}>
-              <Pie data={verticalShareData} dataKey="value" innerRadius={40} outerRadius={65} paddingAngle={3}>
-                {verticalShareData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-              </Pie>
-            </PieChart>
-            <div className="flex-1 space-y-2">
-              {verticalShareData.map((d) => (
-                <div key={d.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
-                    <span style={{ color: "#A0B4D0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>{d.name}</span>
+        <Card className="hover-lift">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold font-[family-name:var(--font-heading)]">Revenue Share</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="h-[160px] w-[160px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={verticalShareData} dataKey="value" innerRadius={50} outerRadius={75} paddingAngle={3}>
+                      {verticalShareData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip contentStyle={tooltipStyle} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-3">
+                {verticalShareData.map((d) => (
+                  <div key={d.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
+                      <span className="text-xs text-muted-foreground font-[family-name:var(--font-body)]">{d.name}</span>
+                    </div>
+                    <span className="text-sm font-bold font-[family-name:var(--font-heading)]" style={{ color: d.color }}>{d.value}%</span>
                   </div>
-                  <span style={{ color: d.color, fontFamily: "Outfit", fontWeight: 700, fontSize: "0.82rem" }}>{d.value}%</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -203,116 +239,137 @@ function OrdersPage() {
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-3 flex-wrap">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl flex-1 min-w-48"
-          style={{ background: "#111D38", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <Search className="w-4 h-4" style={{ color: "#6B7FA0" }} />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by order ID or email..."
-            className="bg-transparent outline-none flex-1"
-            style={{ color: "#E4ECF7", fontFamily: "DM Sans", fontSize: "0.875rem" }} />
+    <div className="space-y-4 page-enter">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)} 
+            placeholder="Search by order ID or email..."
+            className="pl-9 font-[family-name:var(--font-body)]"
+            aria-label="Search orders"
+          />
         </div>
-        <div className="flex gap-1.5">
-          {["all", "service", "grocery", "stationery", "shifting", "bakery"].map((v) => (
-            <button key={v} onClick={() => setFilter(v)}
-              className="px-3 py-2 rounded-xl capitalize text-xs transition-all"
-              style={{
-                background: filter === v ? (VERTICAL_COLOR[v] ?? "#FF6B00") + "20" : "#111D38",
-                border: `1px solid ${filter === v ? (VERTICAL_COLOR[v] ?? "#FF6B00") + "40" : "rgba(255,255,255,0.06)"}`,
-                color: filter === v ? (VERTICAL_COLOR[v] ?? "#FF6B00") : "#6B7FA0",
-                fontFamily: "DM Sans",
-              }}>
-              {v === "all" ? "All" : v}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          {["all", "service", "grocery", "stationery", "shifting", "bakery"].map((v) => {
+            const isSelected = filter === v;
+            const vColor = VERTICAL_COLOR[v] || "var(--accent)";
+            return (
+              <Button 
+                key={v} 
+                onClick={() => setFilter(v)}
+                variant={isSelected ? "default" : "outline"}
+                size="sm"
+                className="capitalize font-[family-name:var(--font-body)]"
+                style={isSelected ? { backgroundColor: `${vColor}20`, color: vColor, borderColor: `${vColor}40` } : {}}
+              >
+                {v === "all" ? "All" : v}
+              </Button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {["Order ID", "Customer Email", "Vertical", "Status", "Amount", "Created", "Actions"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left whitespace-nowrap"
-                    style={{ color: "#6B7FA0", fontFamily: "DM Sans", fontWeight: 600, fontSize: "0.7rem", letterSpacing: "0.05em" }}>
+                  <TableHead key={h} className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-[family-name:var(--font-body)]">
                     {h}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((order, i) => (
-                <tr key={order.id} style={{ borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span style={{ color: "#E4ECF7", fontFamily: "JetBrains Mono", fontSize: "0.78rem" }}>{order.id}</span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span style={{ color: "#A0B4D0", fontFamily: "DM Sans", fontSize: "0.78rem" }}>{order.customer}</span>
-                  </td>
-                  <td className="px-4 py-3"><VerticalTag vertical={order.vertical} /></td>
-                  <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span style={{ color: "#FF6B00", fontFamily: "Outfit", fontWeight: 700, fontSize: "0.875rem" }}>₹{order.amount}</span>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span style={{ color: "#6B7FA0", fontFamily: "JetBrains Mono", fontSize: "0.7rem" }}>{order.created}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button onClick={() => setSelectedOrder(order.id)}
-                      className="px-3 py-1 rounded-lg text-xs"
-                      style={{ background: "#8B5CF620", color: "#8B5CF6", border: "1px solid #8B5CF640", fontFamily: "DM Sans", fontWeight: 600 }}>
-                      Manage
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <Search className="w-8 h-8 mb-2 opacity-50" />
+                      <p className="text-sm font-medium">No orders found</p>
+                      <p className="text-xs">Try adjusting your filters or search query</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-[family-name:var(--font-mono)] text-sm">{order.id}</TableCell>
+                    <TableCell className="font-[family-name:var(--font-body)] text-sm text-muted-foreground">{order.customer}</TableCell>
+                    <TableCell><VerticalTag vertical={order.vertical} /></TableCell>
+                    <TableCell><StatusBadge status={order.status} /></TableCell>
+                    <TableCell className="font-[family-name:var(--font-heading)] font-bold text-accent">₹{order.amount}</TableCell>
+                    <TableCell className="font-[family-name:var(--font-mono)] text-xs text-muted-foreground">{order.created}</TableCell>
+                    <TableCell>
+                      <Button 
+                        size="sm" 
+                        variant="secondary" 
+                        className="h-8 text-xs font-[family-name:var(--font-body)]"
+                        onClick={() => setSelectedOrder(order.id)}
+                      >
+                        Manage
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
-      </div>
+      </Card>
 
       {/* Order Manage Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setSelectedOrder(null)} />
-          <div className="relative w-full max-w-md rounded-2xl p-6 space-y-4"
-            style={{ background: "#0F1830", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <div className="flex items-center justify-between">
-              <h3 style={{ color: "#E4ECF7", fontFamily: "Outfit", fontWeight: 700 }}>Manage {selectedOrder}</h3>
-              <button onClick={() => setSelectedOrder(null)}>
-                <X className="w-5 h-5" style={{ color: "#6B7FA0" }} />
-              </button>
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-[family-name:var(--font-heading)]">Manage {selectedOrder}</DialogTitle>
+            <DialogDescription className="font-[family-name:var(--font-body)] text-sm">
+              Take actions on the selected order.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground">Reassign Provider</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select new provider..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sparkle">Sparkle Home Services</SelectItem>
+                  <SelectItem value="nestigo">NestiGo Grocery Hub</SelectItem>
+                  <SelectItem value="paperhouse">PaperHouse Stationery</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-3">
-              <div>
-                <label style={{ color: "#A0B4D0", fontSize: "0.78rem", fontFamily: "DM Sans", fontWeight: 600 }}>Reassign Provider</label>
-                <select className="w-full mt-1 px-3 py-2 rounded-lg outline-none"
-                  style={{ background: "#111D38", border: "1px solid rgba(255,255,255,0.07)", color: "#E4ECF7", fontFamily: "DM Sans", fontSize: "0.875rem" }}>
-                  <option>Select new provider...</option>
-                  <option>Sparkle Home Services</option>
-                  <option>NestiGo Grocery Hub</option>
-                  <option>PaperHouse Stationery</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <button className="py-2.5 rounded-xl text-sm"
-                  style={{ background: "#3B82F620", color: "#3B82F6", border: "1px solid #3B82F640", fontFamily: "DM Sans", fontWeight: 600 }}>
-                  Reassign
-                </button>
-                <button className="py-2.5 rounded-xl text-sm"
-                  style={{ background: "#F59E0B20", color: "#F59E0B", border: "1px solid #F59E0B40", fontFamily: "DM Sans", fontWeight: 600 }}>
-                  Refund
-                </button>
-                <button className="py-2.5 rounded-xl text-sm"
-                  style={{ background: "#FF3B5C20", color: "#FF3B5C", border: "1px solid #FF3B5C40", fontFamily: "DM Sans", fontWeight: 600 }}>
-                  Cancel
-                </button>
-              </div>
+            <div className="grid grid-cols-3 gap-3">
+              <Button 
+                variant="outline" 
+                className="text-info border-info/40 bg-info/10 hover:bg-info/20 hover:text-info"
+                onClick={() => { alert("Order reassigned"); setSelectedOrder(null); }}
+              >
+                Reassign
+              </Button>
+              <Button 
+                variant="outline" 
+                className="text-warning border-warning/40 bg-warning/10 hover:bg-warning/20 hover:text-warning"
+                onClick={() => { alert("Refund initiated"); setSelectedOrder(null); }}
+              >
+                Refund
+              </Button>
+              <Button 
+                variant="outline" 
+                className="text-destructive border-destructive/40 bg-destructive/10 hover:bg-destructive/20 hover:text-destructive"
+                onClick={() => { alert("Order cancelled"); setSelectedOrder(null); }}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -321,80 +378,92 @@ function OrdersPage() {
 function PrescriptionsPage() {
   const [handled, setHandled] = useState<Record<string, "verified" | "rejected">>({});
 
+  const pendingCount = mockPrescriptions.filter((p) => !handled[p.orderId]).length;
+
   return (
-    <div className="space-y-4 max-w-3xl">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
-        style={{ background: "#8B5CF610", border: "1px solid #8B5CF630" }}>
-        <AlertTriangle className="w-4 h-4" style={{ color: "#8B5CF6" }} />
-        <p style={{ color: "#8B5CF6", fontFamily: "DM Sans", fontWeight: 600, fontSize: "0.82rem" }}>
-          {mockPrescriptions.filter((p) => !handled[p.orderId]).length} prescriptions pending verification
+    <div className="space-y-4 max-w-4xl page-enter">
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20">
+        <AlertTriangle className="w-5 h-5 text-primary" />
+        <p className="text-sm font-semibold text-primary font-[family-name:var(--font-body)]">
+          {pendingCount} prescriptions pending verification
         </p>
       </div>
 
-      {mockPrescriptions.map((rx) => {
-        const action = handled[rx.orderId];
-        return (
-          <div key={rx.orderId} className="rounded-xl overflow-hidden"
-            style={{ background: "#0C1225", border: `1px solid ${action === "verified" ? "#00D4AA40" : action === "rejected" ? "#FF3B5C40" : "rgba(255,255,255,0.06)"}` }}>
-            <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-              <span style={{ color: "#E4ECF7", fontFamily: "JetBrains Mono", fontSize: "0.82rem", fontWeight: 600 }}>{rx.orderId}</span>
-              <span style={{ color: "#6B7FA0", fontFamily: "DM Sans", fontSize: "0.78rem" }}>· {rx.customer}</span>
-              <span className="ml-auto text-xs px-2 py-0.5 rounded"
-                style={{ background: "#8B5CF620", color: "#8B5CF6", fontFamily: "DM Sans" }}>
-                Pharma Order
-              </span>
-            </div>
-            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Document preview */}
-              <div className="rounded-xl overflow-hidden relative" style={{ height: "180px", background: "#111D38", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                  <FileText className="w-10 h-10" style={{ color: "#8B5CF6" }} />
-                  <p style={{ color: "#A0B4D0", fontFamily: "DM Sans", fontSize: "0.78rem", fontWeight: 600 }}>Prescription Document</p>
-                  <p style={{ color: "#3B4A6B", fontFamily: "JetBrains Mono", fontSize: "0.65rem", textAlign: "center", padding: "0 8px", wordBreak: "break-all" }}>
-                    {rx.docUrl}
-                  </p>
+      {mockPrescriptions.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <ClipboardCheck className="w-12 h-12 mb-3 opacity-40" />
+            <p className="text-base font-medium">No pending prescriptions</p>
+            <p className="text-sm">All uploaded prescriptions have been verified.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4 stagger-children">
+          {mockPrescriptions.map((rx) => {
+            const action = handled[rx.orderId];
+            return (
+              <Card key={rx.orderId} className={`overflow-hidden ${action === "verified" ? "border-success/40" : action === "rejected" ? "border-destructive/40" : ""}`}>
+                <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-muted/30">
+                  <span className="font-[family-name:var(--font-mono)] text-sm font-bold">{rx.orderId}</span>
+                  <span className="text-sm text-muted-foreground font-[family-name:var(--font-body)]">· {rx.customer}</span>
+                  <Badge variant="secondary" className="ml-auto bg-primary/20 text-primary hover:bg-primary/30">
+                    Pharma Order
+                  </Badge>
                 </div>
-                <div className="absolute top-2 right-2 px-2 py-0.5 rounded text-xs"
-                  style={{ background: "#8B5CF6", color: "white", fontFamily: "JetBrains Mono" }}>SIGNED URL ✓</div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <p style={{ color: "#6B7FA0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>Ordered Items</p>
-                  <p style={{ color: "#E4ECF7", fontFamily: "DM Sans", fontSize: "0.875rem", marginTop: "4px" }}>{rx.items}</p>
-                </div>
-                <div>
-                  <p style={{ color: "#6B7FA0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>Submitted</p>
-                  <p style={{ color: "#A0B4D0", fontFamily: "JetBrains Mono", fontSize: "0.78rem", marginTop: "4px" }}>{rx.created}</p>
-                </div>
-
-                {action ? (
-                  <div className="rounded-xl p-3 text-center"
-                    style={{ background: action === "verified" ? "#00D4AA10" : "#FF3B5C10", border: `1px solid ${action === "verified" ? "#00D4AA30" : "#FF3B5C30"}` }}>
-                    <p style={{ color: action === "verified" ? "#00D4AA" : "#FF3B5C", fontFamily: "Outfit", fontWeight: 700 }}>
-                      {action === "verified" ? "✓ Prescription Verified" : "✗ Prescription Rejected"}
+                <CardContent className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Document preview */}
+                  <div className="rounded-xl overflow-hidden relative h-[200px] bg-surface-2 border border-border flex flex-col items-center justify-center">
+                    <FileText className="w-12 h-12 text-primary mb-2" />
+                    <p className="text-sm font-semibold text-muted-foreground font-[family-name:var(--font-body)]">Prescription Document</p>
+                    <p className="text-xs text-muted-foreground/80 font-[family-name:var(--font-mono)] mt-2 text-center px-4 break-all">
+                      {rx.docUrl}
                     </p>
-                    {action === "verified" && <p style={{ color: "#6B7FA0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>Payment captured event emitted → dispatch triggered</p>}
+                    <div className="absolute top-3 right-3 px-2 py-1 rounded text-[10px] font-bold bg-primary text-primary-foreground font-[family-name:var(--font-mono)]">
+                      SIGNED URL ✓
+                    </div>
                   </div>
-                ) : (
-                  <div className="flex gap-3">
-                    <button onClick={() => setHandled((p) => ({ ...p, [rx.orderId]: "rejected" }))}
-                      className="flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm"
-                      style={{ background: "#FF3B5C15", border: "1px solid #FF3B5C40", color: "#FF3B5C", fontFamily: "Outfit", fontWeight: 700 }}>
-                      <XCircle className="w-4 h-4" /> Reject
-                    </button>
-                    <button onClick={() => setHandled((p) => ({ ...p, [rx.orderId]: "verified" }))}
-                      className="flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm"
-                      style={{ background: "#00D4AA", color: "#06091A", fontFamily: "Outfit", fontWeight: 700 }}>
-                      <CheckCircle2 className="w-4 h-4" /> Verify
-                    </button>
+
+                  <div className="space-y-5 flex flex-col justify-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground font-[family-name:var(--font-body)]">Ordered Items</p>
+                      <p className="text-sm font-medium mt-1 font-[family-name:var(--font-body)]">{rx.items}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-[family-name:var(--font-body)]">Submitted</p>
+                      <p className="text-sm font-[family-name:var(--font-mono)] text-muted-foreground mt-1">{rx.created}</p>
+                    </div>
+
+                    {action ? (
+                      <div className={`rounded-xl p-4 text-center border ${action === "verified" ? "bg-success/10 border-success/30" : "bg-destructive/10 border-destructive/30"}`}>
+                        <p className={`font-bold font-[family-name:var(--font-heading)] ${action === "verified" ? "text-success" : "text-destructive"}`}>
+                          {action === "verified" ? "✓ Prescription Verified" : "✗ Prescription Rejected"}
+                        </p>
+                        {action === "verified" && <p className="text-xs text-muted-foreground mt-1 font-[family-name:var(--font-body)]">Payment captured event emitted → dispatch triggered</p>}
+                      </div>
+                    ) : (
+                      <div className="flex gap-3 mt-auto pt-2">
+                        <Button 
+                          variant="outline" 
+                          className="flex-1 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setHandled((p) => ({ ...p, [rx.orderId]: "rejected" }))}
+                        >
+                          <XCircle className="w-4 h-4 mr-2" /> Reject
+                        </Button>
+                        <Button 
+                          className="flex-1 bg-success hover:bg-success/90 text-success-foreground"
+                          onClick={() => setHandled((p) => ({ ...p, [rx.orderId]: "verified" }))}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-2" /> Verify
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -413,98 +482,94 @@ function CatalogPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <p style={{ color: "#6B7FA0", fontFamily: "DM Sans", fontSize: "0.82rem" }}>{items.length} catalog items</p>
-        <button onClick={() => setShowCreate(!showCreate)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl"
-          style={{ background: "#FF6B00", color: "white", fontFamily: "DM Sans", fontWeight: 600, fontSize: "0.82rem" }}>
-          <Plus className="w-4 h-4" /> Add Item
-        </button>
+    <div className="space-y-4 page-enter">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <p className="text-sm text-muted-foreground font-[family-name:var(--font-body)]">{items.length} catalog items</p>
+        <Button onClick={() => setShowCreate(!showCreate)} className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
+          <Plus className="w-4 h-4 mr-2" /> Add Item
+        </Button>
       </div>
 
       {showCreate && (
-        <div className="rounded-xl p-5 space-y-4" style={{ background: "#0C1225", border: "1px solid #FF6B0030" }}>
-          <h4 style={{ color: "#E4ECF7", fontFamily: "Outfit", fontWeight: 700 }}>Create Catalog Item</h4>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { field: "name", label: "Item Name", type: "text" },
-              { field: "category", label: "Category", type: "text" },
-              { field: "price", label: "Price (₹)", type: "number" },
-              { field: "unit", label: "Unit", type: "text" },
-            ].map((f) => (
-              <div key={f.field}>
-                <label style={{ color: "#A0B4D0", fontSize: "0.75rem", fontFamily: "DM Sans", fontWeight: 600 }}>{f.label}</label>
-                <input type={f.type}
-                  value={newItem[f.field as keyof typeof newItem] as string}
-                  onChange={(e) => setNewItem((p) => ({ ...p, [f.field]: e.target.value }))}
-                  className="w-full mt-1 px-3 py-2 rounded-lg outline-none"
-                  style={{ background: "#111D38", border: "1px solid rgba(255,255,255,0.07)", color: "#E4ECF7", fontFamily: "DM Sans", fontSize: "0.875rem" }} />
-              </div>
-            ))}
-          </div>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={newItem.rx} onChange={(e) => setNewItem((p) => ({ ...p, rx: e.target.checked }))}
-              style={{ accentColor: "#8B5CF6" }} />
-            <span style={{ color: "#A0B4D0", fontFamily: "DM Sans", fontSize: "0.82rem" }}>Requires Prescription (Rx)</span>
-          </label>
-          <div className="flex gap-2">
-            <button onClick={create} className="px-5 py-2.5 rounded-xl"
-              style={{ background: "#FF6B00", color: "white", fontFamily: "DM Sans", fontWeight: 600 }}>Create</button>
-            <button onClick={() => setShowCreate(false)} className="px-5 py-2.5 rounded-xl"
-              style={{ background: "#162040", color: "#A0B4D0", fontFamily: "DM Sans" }}>Cancel</button>
-          </div>
-        </div>
+        <Card className="border-accent/30 bg-surface-1 animate-scale-in">
+          <CardHeader>
+            <CardTitle className="font-[family-name:var(--font-heading)]">Create Catalog Item</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { field: "name", label: "Item Name", type: "text" },
+                { field: "category", label: "Category", type: "text" },
+                { field: "price", label: "Price (₹)", type: "number" },
+                { field: "unit", label: "Unit", type: "text" },
+              ].map((f) => (
+                <div key={f.field} className="space-y-1">
+                  <Label htmlFor={`new-item-${f.field}`} className="text-xs font-semibold text-muted-foreground">{f.label}</Label>
+                  <Input 
+                    id={`new-item-${f.field}`}
+                    type={f.type}
+                    value={newItem[f.field as keyof typeof newItem] as string}
+                    onChange={(e) => setNewItem((p) => ({ ...p, [f.field]: e.target.value }))}
+                    className="bg-background"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch 
+                id="rx-mode" 
+                checked={newItem.rx} 
+                onCheckedChange={(c) => setNewItem((p) => ({ ...p, rx: c }))}
+                aria-label="Requires Prescription"
+              />
+              <Label htmlFor="rx-mode" className="text-sm text-muted-foreground cursor-pointer">Requires Prescription (Rx)</Label>
+            </div>
+          </CardContent>
+          <CardFooter className="flex gap-2">
+            <Button onClick={create} className="bg-accent hover:bg-accent/90 text-accent-foreground">Create</Button>
+            <Button onClick={() => setShowCreate(false)} variant="secondary">Cancel</Button>
+          </CardFooter>
+        </Card>
       )}
 
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <table className="w-full">
-          <thead>
-            <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              {["Name", "Category", "Price", "Unit", "Rx", "Active", "Edit"].map((h) => (
-                <th key={h} className="px-4 py-3 text-left"
-                  style={{ color: "#6B7FA0", fontFamily: "DM Sans", fontWeight: 600, fontSize: "0.7rem", letterSpacing: "0.05em" }}>{h}</th>
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {["Name", "Category", "Price", "Unit", "Rx", "Active", "Edit"].map((h) => (
+                  <TableHead key={h} className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-[family-name:var(--font-body)]">{h}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium font-[family-name:var(--font-body)] text-sm">{item.name}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm font-[family-name:var(--font-body)]">{item.category}</TableCell>
+                  <TableCell className="font-bold font-[family-name:var(--font-heading)] text-accent">₹{item.price}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm font-[family-name:var(--font-body)]">{item.unit}</TableCell>
+                  <TableCell>
+                    {item.rx ? <Badge variant="secondary" className="bg-primary/20 text-primary">Rx</Badge> : <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell>
+                    <Switch 
+                      checked={item.active} 
+                      onCheckedChange={() => setItems((prev) => prev.map((p) => p.id === item.id ? { ...p, active: !p.active } : p))}
+                      aria-label={`Toggle active status for ${item.name}`}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" className="text-accent hover:text-accent hover:bg-accent/10" aria-label="Edit item">
+                      <Edit3 className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, i) => (
-              <tr key={item.id} style={{ borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                <td className="px-4 py-3">
-                  <p style={{ color: "#E4ECF7", fontFamily: "DM Sans", fontWeight: 500, fontSize: "0.875rem" }}>{item.name}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <span style={{ color: "#6B7FA0", fontFamily: "DM Sans", fontSize: "0.78rem" }}>{item.category}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <span style={{ color: "#FF6B00", fontFamily: "Outfit", fontWeight: 700 }}>₹{item.price}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <span style={{ color: "#6B7FA0", fontFamily: "DM Sans", fontSize: "0.78rem" }}>{item.unit}</span>
-                </td>
-                <td className="px-4 py-3">
-                  {item.rx ? <span style={{ color: "#8B5CF6", fontSize: "0.78rem", fontFamily: "DM Sans" }}>Rx</span> : <span style={{ color: "#3B4A6B" }}>—</span>}
-                </td>
-                <td className="px-4 py-3">
-                  <button onClick={() => setItems((prev) => prev.map((p) => p.id === item.id ? { ...p, active: !p.active } : p))}>
-                    <div className={`w-9 h-5 rounded-full relative transition-all`}
-                      style={{ background: item.active ? "#00D4AA" : "#253558" }}>
-                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all`}
-                        style={{ left: item.active ? "calc(100% - 18px)" : "2px" }} />
-                    </div>
-                  </button>
-                </td>
-                <td className="px-4 py-3">
-                  <button className="p-1.5 rounded-lg"
-                    style={{ background: "#FF6B0015", color: "#FF6B00" }}>
-                    <Edit3 className="w-3.5 h-3.5" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
     </div>
   );
 }
@@ -522,51 +587,189 @@ function CitiesPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <p style={{ color: "#6B7FA0", fontFamily: "DM Sans", fontSize: "0.82rem" }}>
+    <div className="space-y-4 page-enter">
+      <p className="text-sm text-muted-foreground font-[family-name:var(--font-body)]">
         Configure which cities each service category is available in
       </p>
-      {matrix.map((cat) => (
-        <div key={cat.id} className="rounded-xl p-4" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: `${VERTICAL_COLOR[cat.vertical] ?? "#666"}20` }}>
-              <Map className="w-4 h-4" style={{ color: VERTICAL_COLOR[cat.vertical] ?? "#666" }} />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
+        {matrix.map((cat) => (
+          <Card key={cat.id} className="hover-lift">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: `${VERTICAL_COLOR[cat.vertical] ?? "#666"}20` }}>
+                  <Map className="w-4 h-4" style={{ color: VERTICAL_COLOR[cat.vertical] ?? "#666" }} />
+                </div>
+                <CardTitle className="text-base font-semibold font-[family-name:var(--font-body)]">{cat.category}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {CITIES.map((city) => {
+                  const active = cat.cities.includes(city);
+                  return (
+                    <Button 
+                      key={city} 
+                      onClick={() => toggleCity(cat.id, city)}
+                      variant={active ? "default" : "outline"}
+                      size="sm"
+                      className="rounded-full h-7 text-xs font-[family-name:var(--font-body)]"
+                      style={active ? { backgroundColor: `${VERTICAL_COLOR[cat.vertical] ?? "var(--accent)"}20`, color: (VERTICAL_COLOR[cat.vertical] ?? "var(--accent)"), borderColor: `${VERTICAL_COLOR[cat.vertical] ?? "var(--accent)"}40` } : {}}
+                    >
+                      {active ? "✓ " : ""}{city}
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Profile Settings Page
+function ProfilePage({ name, email, role, avatar, onSave }: { name: string, email: string, role: string, avatar: string, onSave: (n: string, e: string, r: string, a: string) => void }) {
+  const [editName, setEditName] = useState(name);
+  const [editEmail, setEditEmail] = useState(email);
+  const [editRole, setEditRole] = useState(role);
+  const [editAvatar, setEditAvatar] = useState(avatar);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditAvatar(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setTimeout(() => {
+      onSave(editName, editEmail, editRole, editAvatar);
+      setIsSaving(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    }, 600);
+  };
+
+  return (
+    <div className="max-w-2xl space-y-6 page-enter">
+      <div>
+        <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)] text-foreground">Profile Settings</h2>
+        <p className="text-muted-foreground text-sm mt-1">Manage your administrator account details.</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Personal Information</CardTitle>
+          <CardDescription>Update your profile information and email address.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="flex items-center gap-6">
+              <Avatar className="w-20 h-20 border-2 border-border shadow-sm">
+                {editAvatar && <AvatarImage src={editAvatar} alt={editName} className="object-cover" />}
+                <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+                  {editName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <Label htmlFor="avatar-upload" className="cursor-pointer">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-sm font-medium">
+                    <Camera className="w-4 h-4 text-muted-foreground" />
+                    Upload new picture
+                  </div>
+                </Label>
+                <input 
+                  id="avatar-upload" 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleImageUpload} 
+                />
+                <p className="text-xs text-muted-foreground mt-2 font-[family-name:var(--font-body)]">JPG, GIF or PNG. Max size of 2MB</p>
+              </div>
             </div>
-            <p style={{ color: "#E4ECF7", fontFamily: "DM Sans", fontWeight: 600 }}>{cat.category}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {CITIES.map((city) => {
-              const active = cat.cities.includes(city);
-              return (
-                <button key={city} onClick={() => toggleCity(cat.id, city)}
-                  className="px-3 py-1 rounded-full text-xs transition-all"
-                  style={{
-                    background: active ? `${VERTICAL_COLOR[cat.vertical] ?? "#FF6B00"}20` : "#111D38",
-                    border: `1px solid ${active ? `${VERTICAL_COLOR[cat.vertical] ?? "#FF6B00"}40` : "rgba(255,255,255,0.07)"}`,
-                    color: active ? (VERTICAL_COLOR[cat.vertical] ?? "#FF6B00") : "#6B7FA0",
-                    fontFamily: "DM Sans", fontWeight: 500,
-                  }}>
-                  {active ? "✓ " : ""}{city}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+
+            <Separator />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="profile-name" className="text-xs font-semibold text-muted-foreground">Full Name</Label>
+                <Input 
+                  id="profile-name" 
+                  value={editName} 
+                  onChange={(e) => setEditName(e.target.value)} 
+                  required 
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-role" className="text-xs font-semibold text-muted-foreground">Role</Label>
+                <Input 
+                  id="profile-role" 
+                  value={editRole} 
+                  onChange={(e) => setEditRole(e.target.value)} 
+                  required 
+                  className="bg-background"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="profile-email" className="text-xs font-semibold text-muted-foreground">Email Address</Label>
+              <Input 
+                id="profile-email" 
+                type="email"
+                value={editEmail} 
+                onChange={(e) => setEditEmail(e.target.value)} 
+                required 
+                className="bg-background"
+              />
+            </div>
+            
+            <Separator className="my-6" />
+            
+            <div className="flex items-center gap-4">
+              <Button type="submit" disabled={isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[120px]">
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+              {showSuccess && (
+                <span className="text-sm text-success flex items-center gap-1.5 animate-fade-in">
+                  <CheckCircle2 className="w-4 h-4" /> Profile updated
+                </span>
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 const navItems = [
-  { id: "analytics", label: "Analytics",     icon: BarChart3 },
-  { id: "orders",    label: "Orders",         icon: Package,  badge: 7 },
-  { id: "catalog",   label: "Catalog",        icon: BookOpen },
-  { id: "cities",    label: "City Coverage",  icon: Map },
+  { id: "analytics",     label: "Analytics",      icon: BarChart3 },
+  { id: "orders",        label: "Orders",         icon: Package,  badge: 7 },
+  { id: "prescriptions", label: "Prescriptions",  icon: ClipboardCheck },
+  { id: "catalog",       label: "Catalog",        icon: BookOpen },
+  { id: "cities",        label: "City Coverage",  icon: Map },
 ];
 
 export function AdminPortal({ onLogout }: { onLogout: () => void }) {
   const [activePage, setActivePage] = useState("analytics");
+  const [adminName, setAdminName] = useState("Ops Admin");
+  const [adminRole, setAdminRole] = useState("Super Admin");
+  const [adminEmail, setAdminEmail] = useState("ops.admin@nestigo.com");
+  const [adminAvatar, setAdminAvatar] = useState("");
 
   return (
     <PortalShell
@@ -577,13 +780,29 @@ export function AdminPortal({ onLogout }: { onLogout: () => void }) {
       activePage={activePage}
       setActivePage={setActivePage}
       onLogout={onLogout}
-      userName="Ops Admin"
-      userRole="Super Admin"
+      userName={adminName}
+      userRole={adminRole}
+      userAvatarUrl={adminAvatar}
     >
       {activePage === "analytics" && <AnalyticsPage />}
       {activePage === "orders" && <OrdersPage />}
+      {activePage === "prescriptions" && <PrescriptionsPage />}
       {activePage === "catalog" && <CatalogPage />}
       {activePage === "cities" && <CitiesPage />}
+      {activePage === "profile" && (
+        <ProfilePage 
+          name={adminName} 
+          email={adminEmail} 
+          role={adminRole} 
+          avatar={adminAvatar}
+          onSave={(name, email, role, avatar) => {
+            setAdminName(name);
+            setAdminEmail(email);
+            setAdminRole(role);
+            setAdminAvatar(avatar);
+          }}
+        />
+      )}
     </PortalShell>
   );
 }

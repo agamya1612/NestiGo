@@ -1,38 +1,33 @@
 import { useState } from "react";
-import { ShoppingBag, Wrench, ShieldCheck, Eye, EyeOff, Zap } from "lucide-react";
+import { ShoppingBag, Wrench, Zap, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
 
-const BRAND_GRADIENT = "linear-gradient(90deg, #38BDF8 0%, #7C3AED 35%, #D946EF 70%, #F59E0B 100%)";
-const HERO_BG =
-  "radial-gradient(circle at top left,#3B2C85 0%,transparent 35%), radial-gradient(circle at bottom center,#4C1D95 0%,transparent 40%), radial-gradient(circle at right,#0F766E 0%,transparent 30%), #0B1020";
+// Isolated Admin Configuration (Hidden Prototype Feature)
+const ADMIN_CONFIG = {
+  id: "ops.admin@nestigo.com",
+  password: "Admin@456",
+};
 
 const portals = [
   {
     id: "customer",
     label: "Customer",
-    sub: "Shop across all verticals",
+    sub: "Shop across all categories",
     icon: ShoppingBag,
-    color: "#7C3AED",
   },
   {
     id: "provider",
     label: "Provider",
     sub: "Manage jobs & inventory",
     icon: Wrench,
-    color: "#D946EF",
-  },
-  {
-    id: "admin",
-    label: "Admin",
-    sub: "Command center & analytics",
-    icon: ShieldCheck,
-    color: "#38BDF8",
   },
 ];
 
 const demoCredentials: Record<string, { email: string; password: string }> = {
   customer: { email: "priya.sharma@nestigo.com", password: "Demo@123" },
   provider: { email: "sparkle.cleaners@nestigo.com", password: "Demo@123" },
-  admin: { email: "ops.admin@nestigo.com", password: "Admin@456" },
 };
 
 interface LoginPageProps {
@@ -43,547 +38,214 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [selectedPortal, setSelectedPortal] = useState("customer");
   const [email, setEmail] = useState(demoCredentials.customer.email);
   const [password, setPassword] = useState(demoCredentials.customer.password);
-  const [showPass, setShowPass] = useState(false);
+  
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handlePortalSelect = (id: string) => {
     setSelectedPortal(id);
     setEmail(demoCredentials[id].email);
     setPassword(demoCredentials[id].password);
+    setError(null);
   };
 
-  const handleLogin = () => {
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
     setLoading(true);
+
     setTimeout(() => {
       setLoading(false);
-      onLogin(selectedPortal);
-    }, 900);
+      
+      // Admin hidden login intercept
+      if (selectedPortal === "customer" && email === ADMIN_CONFIG.id) {
+        if (password === ADMIN_CONFIG.password) {
+          onLogin("admin");
+        } else {
+          // If ID matches but password wrong, show generic error
+          setError("Invalid credentials. Please check your email and password.");
+        }
+        return;
+      }
+
+      // Normal login flow
+      if (
+        email === demoCredentials[selectedPortal].email &&
+        password === demoCredentials[selectedPortal].password
+      ) {
+        onLogin(selectedPortal);
+      } else {
+        setError("Invalid credentials. Please check your email and password.");
+      }
+    }, 800);
   };
 
-  const selected = portals.find((p) => p.id === selectedPortal)!;
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "row",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      {/* ── LEFT HERO PANEL ── */}
-      <div
-        style={{
-          width: "45%",
-          minWidth: 340,
-          background: HERO_BG,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          padding: "3rem 3.5rem",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Top: Logo row */}
-        <div style={{ position: "relative", zIndex: 1 }}>
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            {/* Gradient pill badge */}
-            <div
-              style={{
-                background: BRAND_GRADIENT,
-                borderRadius: 10,
-                width: 36,
-                height: 36,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Zap size={18} color="#fff" fill="#fff" />
-            </div>
-            {/* NestiGo wordmark with gradient text */}
-            <span
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 800,
-                fontSize: "1.45rem",
-                letterSpacing: "-0.02em",
-                background: BRAND_GRADIENT,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              NestiGo
-            </span>
-            {/* SUPER APP badge */}
-            <span
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 600,
-                fontSize: "0.62rem",
-                letterSpacing: "0.08em",
-                color: "#D946EF",
-                background: "rgba(217,70,239,0.12)",
-                border: "1px solid rgba(217,70,239,0.3)",
-                borderRadius: 999,
-                padding: "2px 10px",
-              }}
-            >
-              SUPER APP
-            </span>
+    <div className="min-h-screen flex flex-col md:flex-row font-[family-name:var(--font-body)] bg-background">
+      {/* --- LEFT BRANDING PANEL --- */}
+      <div className="hidden md:flex w-[45%] max-w-[600px] flex-col justify-between p-14 bg-zinc-950 text-zinc-50 relative overflow-hidden">
+        {/* Restrained structural gradients */}
+        <div className="absolute top-[-25%] left-[-15%] w-[80%] h-[60%] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[-25%] right-[-15%] w-[80%] h-[60%] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
+        
+        {/* Brand / Logo */}
+        <div className="relative z-10 flex items-center gap-3 mb-12">
+          <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center shadow-lg">
+            <Zap size={20} className="text-zinc-950" fill="currentColor" />
           </div>
+          <span className="font-[family-name:var(--font-heading)] font-extrabold text-2xl tracking-tight text-white">
+            NestiGo
+          </span>
         </div>
 
-        {/* Middle: Headline + stats */}
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <h1
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontWeight: 800,
-              fontSize: "2.8rem",
-              lineHeight: 1.08,
-              letterSpacing: "-0.03em",
-              color: "#fff",
-              margin: "0 0 1.5rem 0",
-            }}
-          >
-            One Platform.
-            <br />
-            <span
-              style={{
-                background: BRAND_GRADIENT,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              Four Verticals.
-            </span>
-            <br />
-            Zero Limits.
+        {/* Content */}
+        <div className="relative z-10 max-w-[420px]">
+          <h1 className="font-[family-name:var(--font-heading)] font-bold text-[2.75rem] leading-[1.15] tracking-tight mb-6 text-white">
+            The platform for <br />
+            <span className="text-zinc-400">everything.</span>
           </h1>
-
-          {/* Stats grid 2×2 */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 12,
-              marginTop: 8,
-            }}
-          >
-            {[
-              { label: "1.2K+", sub: "Active orders" },
-              { label: "85+", sub: "Live providers" },
-              { label: "4", sub: "Verticals" },
-              { label: "12", sub: "Cities" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 14,
-                  padding: "14px 16px",
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "1.55rem",
-                    color: "#fff",
-                    lineHeight: 1,
-                  }}
-                >
-                  {stat.label}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "Inter, sans-serif",
-                    fontSize: "0.75rem",
-                    color: "rgba(255,255,255,0.45)",
-                    marginTop: 4,
-                  }}
-                >
-                  {stat.sub}
-                </div>
-              </div>
-            ))}
+          <p className="text-zinc-400 text-[1.05rem] leading-relaxed mb-12 font-medium">
+            Connect customers and service providers seamlessly with our enterprise-grade infrastructure.
+          </p>
+          
+          <div className="flex items-center gap-10 border-t border-zinc-800/80 pt-10">
+            <div>
+              <div className="text-3xl font-bold font-[family-name:var(--font-heading)] text-white">2</div>
+              <div className="text-[0.8rem] font-medium text-zinc-500 mt-1 uppercase tracking-wider">Core Portals</div>
+            </div>
+            <div className="w-px h-12 bg-zinc-800/80" />
+            <div>
+              <div className="text-3xl font-bold font-[family-name:var(--font-heading)] text-white">99.9%</div>
+              <div className="text-[0.8rem] font-medium text-zinc-500 mt-1 uppercase tracking-wider">Uptime SLA</div>
+            </div>
+            <div className="w-px h-12 bg-zinc-800/80" />
+            <div>
+              <div className="text-3xl font-bold font-[family-name:var(--font-heading)] text-white">24/7</div>
+              <div className="text-[0.8rem] font-medium text-zinc-500 mt-1 uppercase tracking-wider">Support</div>
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <p
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "0.68rem",
-              color: "rgba(255,255,255,0.22)",
-              margin: 0,
-            }}
-          >
-            v1.0.0 · Enterprise Edition · 15 Microservices
-          </p>
+        <div className="relative z-10 text-[0.7rem] font-medium text-zinc-600 uppercase tracking-widest">
+          © 2026 NestiGo Enterprise · Built in India
         </div>
       </div>
 
-      {/* ── RIGHT FORM PANEL ── */}
-      <div
-        style={{
-          flex: 1,
-          background: "#fff",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "3rem 3.5rem",
-          position: "relative",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 420 }}>
-          {/* Heading */}
-          <div style={{ marginBottom: 28 }}>
-            <h2
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 700,
-                fontSize: "1.65rem",
-                color: "#111827",
-                margin: "0 0 6px 0",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Sign in to portal
+      {/* --- RIGHT LOGIN PANEL --- */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 relative min-h-[100dvh]">
+        {/* Mobile Header */}
+        <div className="md:hidden absolute top-0 left-0 right-0 p-6 flex items-center gap-2 z-10">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <Zap size={16} className="text-primary-foreground" fill="currentColor" />
+          </div>
+          <span className="font-[family-name:var(--font-heading)] font-extrabold text-xl tracking-tight text-foreground">
+            NestiGo
+          </span>
+        </div>
+
+        <div className="w-full max-w-[380px] animate-fade-in-up mt-12 md:mt-0">
+          <div className="mb-8 text-center md:text-left">
+            <h2 className="font-[family-name:var(--font-heading)] font-bold text-3xl tracking-tight text-foreground mb-2">
+              Sign in
             </h2>
-            <p
-              style={{
-                fontFamily: "Inter, sans-serif",
-                fontSize: "0.875rem",
-                color: "#6B7280",
-                margin: 0,
-              }}
-            >
-              Select your role to access the right portal
+            <p className="text-muted-foreground text-[0.95rem]">
+              Select your role and authenticate to continue.
             </p>
           </div>
 
-          {/* Portal selector — 3 buttons */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 8,
-              marginBottom: 16,
-            }}
-          >
+          <div className="grid grid-cols-2 gap-3 mb-8">
             {portals.map((p) => {
-              const Icon = p.icon;
               const isActive = selectedPortal === p.id;
+              const Icon = p.icon;
               return (
                 <button
                   key={p.id}
+                  type="button"
                   onClick={() => handlePortalSelect(p.id)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "10px 4px",
-                    borderRadius: 12,
-                    border: isActive ? `2px solid ${p.color}` : "2px solid #E5E7EB",
-                    background: isActive ? `${p.color}10` : "#F8FAFC",
-                    cursor: "pointer",
-                    transition: "all 0.18s",
-                    outline: "none",
-                  }}
+                  className={`relative flex flex-col items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200 outline-none ${
+                    isActive
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
+                      : "border-border bg-card hover:bg-accent/40 hover:border-border/80 text-muted-foreground"
+                  }`}
                 >
-                  <Icon size={16} color={isActive ? p.color : "#9CA3AF"} />
-                  <span
-                    style={{
-                      fontFamily: "Inter, sans-serif",
-                      fontWeight: 600,
-                      fontSize: "0.62rem",
-                      color: isActive ? p.color : "#9CA3AF",
-                    }}
-                  >
-                    {p.label}
-                  </span>
+                  <div className={`shrink-0 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                    <Icon size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className={`font-semibold text-sm ${isActive ? "text-foreground" : ""}`}>
+                      {p.label}
+                    </span>
+                  </div>
+                  {isActive && (
+                    <div className="absolute top-4 right-4">
+                      <CheckCircle2 size={16} className="text-primary shrink-0" />
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* Portal description chip */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: `${selected.color}08`,
-              border: `1px solid ${selected.color}25`,
-              borderRadius: 12,
-              padding: "10px 14px",
-              marginBottom: 24,
-            }}
-          >
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: `${selected.color}18`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <selected.icon size={15} color={selected.color} />
-            </div>
-            <div>
-              <p
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontWeight: 600,
-                  fontSize: "0.83rem",
-                  color: "#111827",
-                  margin: 0,
-                  lineHeight: 1.2,
-                }}
-              >
-                {selected.label} Portal
-              </p>
-              <p
-                style={{
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: "0.73rem",
-                  color: "#6B7280",
-                  margin: 0,
-                  marginTop: 2,
-                }}
-              >
-                {selected.sub}
-              </p>
-            </div>
-          </div>
+          <form onSubmit={handleLogin} className="space-y-6">
+            {error && (
+              <div className="p-3.5 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-2.5 text-destructive animate-in fade-in slide-in-from-top-2">
+                <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                <p className="text-[0.9rem] font-medium leading-snug">{error}</p>
+              </div>
+            )}
 
-          {/* Form fields */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Email */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontFamily: "Inter, sans-serif",
-                  fontWeight: 600,
-                  fontSize: "0.78rem",
-                  color: "#4B5563",
-                  marginBottom: 6,
-                }}
-              >
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "11px 14px",
-                  borderRadius: 10,
-                  border: "1px solid #E5E7EB",
-                  background: "#fff",
-                  color: "#111827",
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: "0.875rem",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  transition: "border-color 0.15s, box-shadow 0.15s",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "#7C3AED";
-                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "#E5E7EB";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontFamily: "Inter, sans-serif",
-                  fontWeight: 600,
-                  fontSize: "0.78rem",
-                  color: "#4B5563",
-                  marginBottom: 6,
-                }}
-              >
-                Password
-              </label>
-              <div style={{ position: "relative" }}>
-                <input
-                  type={showPass ? "text" : "password"}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-[0.9rem] font-semibold text-foreground">Email address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 bg-background text-[0.95rem] transition-shadow focus-visible:ring-primary/30"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-[0.9rem] font-semibold text-foreground">Password</Label>
+                  <a href="#" className="text-[0.8rem] text-muted-foreground hover:text-primary transition-colors font-medium" tabIndex={-1}>
+                    Forgot password?
+                  </a>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "11px 42px 11px 14px",
-                    borderRadius: 10,
-                    border: "1px solid #E5E7EB",
-                    background: "#fff",
-                    color: "#111827",
-                    fontFamily: "Inter, sans-serif",
-                    fontSize: "0.875rem",
-                    outline: "none",
-                    boxSizing: "border-box",
-                    transition: "border-color 0.15s, box-shadow 0.15s",
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#7C3AED";
-                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "#E5E7EB";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  className="h-12 bg-background text-[0.95rem] transition-shadow focus-visible:ring-primary/30"
+                  required
                 />
-                <button
-                  onClick={() => setShowPass(!showPass)}
-                  style={{
-                    position: "absolute",
-                    right: 12,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    color: "#9CA3AF",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
               </div>
             </div>
 
-            {/* CTA button */}
-            <button
-              onClick={handleLogin}
+            <Button
+              type="submit"
               disabled={loading}
-              style={{
-                width: "100%",
-                padding: "13px",
-                borderRadius: 12,
-                border: "none",
-                background: loading
-                  ? "linear-gradient(135deg,#9D6FE8,#E47EF5)"
-                  : "linear-gradient(135deg,#7C3AED,#D946EF)",
-                color: "#fff",
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 700,
-                fontSize: "0.95rem",
-                letterSpacing: "0.01em",
-                cursor: loading ? "not-allowed" : "pointer",
-                boxShadow: "0 10px 25px rgba(124,58,237,0.35)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                transition: "opacity 0.15s",
-                marginTop: 4,
-              }}
+              className="w-full h-12 text-[0.95rem] font-bold shadow-sm transition-all rounded-xl"
             >
               {loading ? (
-                <>
-                  <div
-                    style={{
-                      width: 16,
-                      height: 16,
-                      border: "2px solid rgba(255,255,255,0.3)",
-                      borderTopColor: "#fff",
-                      borderRadius: "50%",
-                      animation: "spin 0.7s linear infinite",
-                    }}
-                  />
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   Authenticating...
-                </>
+                </div>
               ) : (
-                `Enter ${selected.label} Portal`
+                <>
+                  Sign in to {portals.find(p => p.id === selectedPortal)?.label}
+                  <ChevronRight size={18} className="ml-1.5 opacity-70" />
+                </>
               )}
-            </button>
-          </div>
-
-          {/* Demo access note */}
-          <div
-            style={{
-              marginTop: 20,
-              padding: "10px 14px",
-              borderRadius: 10,
-              background: "rgba(124,58,237,0.05)",
-              border: "1px solid rgba(124,58,237,0.15)",
-            }}
-          >
-            <p
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "0.68rem",
-                fontWeight: 500,
-                color: "#7C3AED",
-                margin: 0,
-                letterSpacing: "0.04em",
-              }}
-            >
-              DEMO ACCESS — Credentials auto-filled per portal
-            </p>
-          </div>
+            </Button>
+          </form>
         </div>
       </div>
-
-      {/* ── Right panel footer ── */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: "45%",
-          right: 0,
-          padding: "16px 3.5rem",
-          borderTop: "1px solid #F3F4F6",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "8px",
-        }}
-      >
-        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.65rem", color: "#9CA3AF", margin: 0 }}>
-          © 2026 NestiGo · Built in India
-        </p>
-        <div style={{ display: "flex", gap: "16px" }}>
-          {["Privacy Policy", "Terms", "Help Center"].map((link) => (
-            <a key={link} href="#"
-              style={{ fontFamily: "Inter, sans-serif", fontSize: "0.68rem", color: "#9CA3AF", textDecoration: "none" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#7C3AED")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#9CA3AF")}>
-              {link}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Keyframe for spinner */}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

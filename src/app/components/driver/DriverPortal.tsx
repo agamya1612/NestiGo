@@ -1,9 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Radar, Package, Wallet, Navigation, MessageSquare,
   CheckCircle2, MapPin, Clock, Send, Truck, TrendingUp, ArrowRight, Zap
 } from "lucide-react";
 import { PortalShell } from "../PortalShell";
+
+import { Button } from "@/app/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/app/components/ui/card";
+import { Input } from "@/app/components/ui/input";
+import { Badge } from "@/app/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
+import { Switch } from "@/app/components/ui/switch";
+import { Separator } from "@/app/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/app/components/ui/avatar";
 
 const mockJobs = [
   { id: "JOB-9041", orderId: "ORD-2026-4850", type: "service", customer: "Priya Sharma", pickupAddr: "Sparkle Services, Indiranagar", dropAddr: "123 MG Road, Indiranagar, Bengaluru", items: "AC Deep Cleaning (1.5 Ton)", payout: 799, status: "active", distance: "1.2 km", eta: "12 min" },
@@ -44,76 +53,84 @@ function RadarPage() {
   }, [isOnline]);
 
   return (
-    <div className="max-w-sm mx-auto space-y-4">
-      {/* Status card */}
-      <div className="rounded-2xl p-5 text-center"
-        style={{ background: "#0C1225", border: `2px solid ${isOnline ? "#00D4AA40" : "rgba(255,255,255,0.06)"}` }}>
-        <div className="relative w-20 h-20 mx-auto mb-4">
-          <div className={`absolute inset-0 rounded-full ${isOnline ? "animate-ping" : ""}`}
-            style={{ background: isOnline ? "#00D4AA20" : "transparent" }} />
-          <div className="relative w-20 h-20 rounded-full flex items-center justify-center"
-            style={{ background: isOnline ? "#00D4AA" : "#162040" }}>
-            <Truck className="w-9 h-9 text-white" />
-          </div>
-        </div>
-        <p style={{ color: isOnline ? "#00D4AA" : "#6B7FA0", fontFamily: "Outfit", fontWeight: 800, fontSize: "1.1rem" }}>
-          {isOnline ? "ON DUTY" : "OFF DUTY"}
-        </p>
-        <p style={{ color: "#6B7FA0", fontSize: "0.75rem", fontFamily: "DM Sans", marginTop: "4px" }}>
-          {isOnline ? "Broadcasting location to dispatch" : "Toggle to go online"}
-        </p>
-
-        <button onClick={() => setIsOnline((v) => !v)}
-          className="mt-4 px-8 py-3 rounded-2xl transition-all"
-          style={{
-            background: isOnline ? "#FF3B5C" : "#00D4AA",
-            color: "white",
-            fontFamily: "Outfit",
-            fontWeight: 800,
-            fontSize: "0.95rem",
-            boxShadow: isOnline ? "0 4px 20px rgba(255,59,92,0.3)" : "0 4px 20px rgba(0,212,170,0.3)",
-          }}>
-          {isOnline ? "Go Offline" : "Go Online"}
-        </button>
-      </div>
-
-      {/* GPS Data */}
-      {isOnline && (
-        <div className="rounded-xl p-4 space-y-3" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span style={{ color: "#00D4AA", fontFamily: "JetBrains Mono", fontSize: "0.72rem", fontWeight: 600 }}>
-              GPS ACTIVE · LIVE PING
-            </span>
-          </div>
-          {[
-            { label: "Latitude", value: coords.lat.toFixed(6) },
-            { label: "Longitude", value: coords.lng.toFixed(6) },
-            { label: "Last Ping", value: lastPing },
-            { label: "Redis GEO Key", value: "active_providers" },
-          ].map((row) => (
-            <div key={row.label} className="flex justify-between items-center py-1.5 border-b"
-              style={{ borderColor: "rgba(255,255,255,0.05)" }}>
-              <span style={{ color: "#6B7FA0", fontFamily: "DM Sans", fontSize: "0.78rem" }}>{row.label}</span>
-              <span style={{ color: "#E4ECF7", fontFamily: "JetBrains Mono", fontSize: "0.78rem" }}>{row.value}</span>
+    <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 page-enter">
+      {/* Status Card */}
+      <Card className="text-center overflow-hidden border-2 transition-colors duration-300" 
+            style={{ borderColor: isOnline ? "#00D4AA40" : "var(--border)" }}>
+        <CardContent className="p-6">
+          <div className="relative w-20 h-20 mx-auto mb-4">
+            <div className={`absolute inset-0 rounded-full ${isOnline ? "animate-pulse-dot" : ""}`}
+              style={{ background: isOnline ? "#00D4AA20" : "transparent" }} />
+            <div className="relative w-20 h-20 rounded-full flex items-center justify-center transition-colors duration-300"
+              style={{ background: isOnline ? "#00D4AA" : "var(--muted)" }}>
+              <Truck className={`w-9 h-9 ${isOnline ? "text-white" : "text-muted-foreground"}`} />
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Today's stats */}
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: "Jobs Today", value: "4", color: "#FF6B00" },
-          { label: "Distance", value: "18.2km", color: "#3B82F6" },
-          { label: "Earnings", value: "₹1,840", color: "#00D4AA" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl p-3 text-center"
-            style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <p style={{ color: s.color, fontFamily: "Outfit", fontWeight: 800, fontSize: "1rem" }}>{s.value}</p>
-            <p style={{ color: "#6B7FA0", fontSize: "0.65rem", fontFamily: "DM Sans" }}>{s.label}</p>
           </div>
-        ))}
+          <h2 className="text-xl font-[family-name:var(--font-heading)] font-bold transition-colors duration-300" 
+              style={{ color: isOnline ? "#00D4AA" : "var(--muted-foreground)" }}>
+            {isOnline ? "ON DUTY" : "OFF DUTY"}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isOnline ? "Broadcasting location to dispatch" : "Toggle to go online"}
+          </p>
+
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <Switch 
+              id="duty-toggle"
+              checked={isOnline}
+              onCheckedChange={setIsOnline}
+              aria-label="Toggle duty status"
+            />
+            <label htmlFor="duty-toggle" className="text-sm font-medium cursor-pointer">
+              {isOnline ? "Go Offline" : "Go Online"}
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
+        {/* GPS Data */}
+        {isOnline && (
+          <Card className="sm:col-span-2 border-border shadow-sm">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                <span className="text-[11px] font-bold tracking-wider font-[family-name:var(--font-mono)]" style={{ color: "#00D4AA" }}>
+                  GPS ACTIVE · LIVE PING
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                {[
+                  { label: "Latitude", value: coords.lat.toFixed(6) },
+                  { label: "Longitude", value: coords.lng.toFixed(6) },
+                  { label: "Last Ping", value: lastPing },
+                  { label: "Redis GEO Key", value: "active_providers" },
+                ].map((row) => (
+                  <div key={row.label} className="flex justify-between items-center py-1.5 border-b border-border">
+                    <span className="text-xs text-muted-foreground">{row.label}</span>
+                    <span className="text-xs text-foreground font-[family-name:var(--font-mono)]">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Today's stats */}
+        <Card className="sm:col-span-2 border-border bg-surface-1 shadow-sm">
+           <CardContent className="p-4 grid grid-cols-3 gap-2 sm:gap-4 divide-x divide-border">
+             {[
+              { label: "Jobs Today", value: "4", color: "var(--warning)" },
+              { label: "Distance", value: "18.2km", color: "var(--info)" },
+              { label: "Earnings", value: "₹1,840", color: "#00D4AA" },
+             ].map((s) => (
+               <div key={s.label} className="text-center px-2">
+                 <p className="font-[family-name:var(--font-heading)] font-bold text-lg md:text-xl" style={{ color: s.color }}>{s.value}</p>
+                 <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+               </div>
+             ))}
+           </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -125,87 +142,87 @@ function JobsPage({ setPage, setActiveJobId }: { setPage: (p: string) => void; s
   const filtered = mockJobs.filter((j) => tab === "active" ? j.status === "active" : j.status === "completed");
 
   return (
-    <div className="space-y-4">
-      {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl w-fit"
-        style={{ background: "#111D38" }}>
-        {(["active", "completed"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            className="px-4 py-1.5 rounded-lg capitalize transition-all"
-            style={{
-              background: tab === t ? "#00D4AA" : "transparent",
-              color: tab === t ? "#06091A" : "#6B7FA0",
-              fontFamily: "DM Sans", fontWeight: 600, fontSize: "0.82rem",
-            }}>
-            {t}
-          </button>
-        ))}
-      </div>
+    <div className="max-w-2xl mx-auto space-y-6 page-enter">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
+        <TabsList className="grid w-full sm:w-64 grid-cols-2">
+          <TabsTrigger value="active">Active</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {filtered.length === 0 && (
-        <div className="text-center py-10">
-          <Package className="w-10 h-10 mx-auto mb-3" style={{ color: "#3B4A6B" }} />
-          <p style={{ color: "#6B7FA0", fontFamily: "DM Sans" }}>No {tab} jobs</p>
-        </div>
+        <Card className="empty-state animate-scale-in">
+          <Package className="w-12 h-12 text-muted-foreground/40" />
+          <p className="text-sm font-medium">No {tab} jobs</p>
+          <p className="text-xs text-muted-foreground">Check back later for new requests.</p>
+        </Card>
       )}
 
-      {filtered.map((job) => (
-        <div key={job.id} className="rounded-xl overflow-hidden"
-          style={{ background: "#0C1225", border: `1px solid ${job.status === "active" ? "#00D4AA30" : "rgba(255,255,255,0.06)"}` }}>
-          <div className="flex items-center justify-between px-4 py-2.5 border-b"
-            style={{ borderColor: "rgba(255,255,255,0.06)", background: job.status === "active" ? "#00D4AA08" : "transparent" }}>
-            <div className="flex items-center gap-2">
-              <span style={{ color: "#E4ECF7", fontFamily: "JetBrains Mono", fontSize: "0.78rem" }}>{job.id}</span>
-              <span className="px-1.5 py-0.5 rounded text-xs"
-                style={{ background: `${VERTICAL_COLOR[job.type] ?? "#666"}20`, color: VERTICAL_COLOR[job.type] ?? "#666", fontFamily: "DM Sans" }}>
-                {job.type}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
+        {filtered.map((job) => (
+          <Card key={job.id} className={`overflow-hidden hover-lift flex flex-col ${job.status === "active" ? "border-primary/30" : ""}`}
+            style={job.status === "active" ? { borderColor: "#00D4AA40" } : {}}>
+            <CardHeader className="px-4 py-3 border-b border-border flex flex-row items-center justify-between space-y-0"
+              style={job.status === "active" ? { background: "#00D4AA0A" } : {}}>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold font-[family-name:var(--font-mono)]">{job.id}</span>
+                <Badge variant="secondary" className="text-[10px] capitalize"
+                  style={{ background: `${VERTICAL_COLOR[job.type] ?? "#666"}20`, color: VERTICAL_COLOR[job.type] ?? "#666" }}>
+                  {job.type}
+                </Badge>
+              </div>
+              <span className="font-bold text-sm" style={{ color: job.status === "active" ? "#00D4AA" : "var(--success)" }}>
+                ₹{job.payout}
               </span>
-            </div>
-            <span style={{ color: job.status === "active" ? "#00D4AA" : "#10B981", fontFamily: "Outfit", fontWeight: 700, fontSize: "0.95rem" }}>
-              ₹{job.payout}
-            </span>
-          </div>
-          <div className="p-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="space-y-2 flex-1 min-w-0">
-                <div className="flex items-start gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500 flex-shrink-0 mt-0.5" />
-                  <p style={{ color: "#A0B4D0", fontFamily: "DM Sans", fontSize: "0.78rem" }}>{job.pickupAddr}</p>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4 flex-1">
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-3 h-3 rounded-full bg-accent flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground">{job.pickupAddr}</p>
                 </div>
-                <div className="w-px h-3 ml-1.5 border-l border-dashed" style={{ borderColor: "rgba(255,255,255,0.15)" }} />
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-3 h-3 text-green-400 flex-shrink-0 mt-0.5" />
-                  <p style={{ color: "#A0B4D0", fontFamily: "DM Sans", fontSize: "0.78rem" }}>{job.dropAddr}</p>
+                <div className="w-px h-4 ml-1.5 border-l border-dashed border-border" />
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-3 h-3 text-success flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground">{job.dropAddr}</p>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <span style={{ color: "#6B7FA0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>
-                📦 {job.items}
-              </span>
-              {job.eta && (
-                <span style={{ color: "#F59E0B", fontSize: "0.72rem", fontFamily: "JetBrains Mono" }}>
-                  ETA {job.eta}
+              
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Package className="w-3 h-3" /> {job.items}
                 </span>
-              )}
-            </div>
-            {job.status === "active" && (
-              <div className="flex gap-2">
-                <button onClick={() => { setActiveJobId(job.id); setPage("jobdetail"); }}
-                  className="flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2"
-                  style={{ background: "#00D4AA", color: "#06091A", fontFamily: "Outfit", fontWeight: 700, fontSize: "0.85rem" }}>
-                  <Navigation className="w-4 h-4" /> Navigate
-                </button>
-                <button onClick={() => setPage("driverchat")}
-                  className="py-2.5 px-4 rounded-xl"
-                  style={{ background: "#3B82F620", border: "1px solid #3B82F640", color: "#3B82F6" }}>
-                  <MessageSquare className="w-4 h-4" />
-                </button>
+                {job.eta && (
+                  <Badge variant="outline" className="text-[10px] font-[family-name:var(--font-mono)] text-accent border-accent/30 bg-accent/5">
+                    ETA {job.eta}
+                  </Badge>
+                )}
               </div>
+            </CardContent>
+            {job.status === "active" && (
+              <CardFooter className="p-4 pt-0 gap-2">
+                <Button 
+                  onClick={() => { setActiveJobId(job.id); setPage("jobdetail"); }}
+                  className="flex-1 text-black font-semibold hover:opacity-90"
+                  style={{ background: "#00D4AA" }}
+                  aria-label={`Navigate to job ${job.id}`}
+                >
+                  <Navigation className="w-4 h-4 mr-2" /> Navigate
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setPage("driverchat")}
+                  className="text-info border-info/30 hover:bg-info/10 hover:text-info"
+                  aria-label="Chat with customer"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </Button>
+              </CardFooter>
             )}
-          </div>
-        </div>
-      ))}
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
@@ -216,104 +233,117 @@ function JobDetailPage({ jobId }: { jobId: string }) {
   const [status, setStatus] = useState<"enroute" | "picked_up" | "completed">("enroute");
 
   return (
-    <div className="max-w-sm mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 page-enter">
       {/* Map simulation */}
-      <div className="rounded-2xl overflow-hidden relative" style={{ height: "200px", background: "#0C1225" }}>
-        <div className="absolute inset-0" style={{
-          backgroundImage: "linear-gradient(rgba(0,212,170,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,170,0.08) 1px, transparent 1px)",
+      <Card className="overflow-hidden relative h-48 md:h-64 bg-surface-2 border-border">
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: "linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)",
           backgroundSize: "25px 25px",
         }} />
-        <div className="absolute top-4 left-4 flex flex-col gap-1">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: "rgba(6,9,26,0.9)", border: "1px solid rgba(255,107,0,0.3)" }}>
-            <div className="w-3 h-3 rounded-full" style={{ background: "#FF6B00" }} />
-            <p style={{ color: "#FF6B00", fontFamily: "JetBrains Mono", fontSize: "0.72rem" }}>PICKUP</p>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: "rgba(6,9,26,0.9)", border: "1px solid rgba(0,212,170,0.3)" }}>
-            <MapPin className="w-3 h-3" style={{ color: "#00D4AA" }} />
-            <p style={{ color: "#00D4AA", fontFamily: "JetBrains Mono", fontSize: "0.72rem" }}>DROP</p>
-          </div>
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
+          <Badge variant="outline" className="bg-background/90 backdrop-blur-sm border-accent/40 text-accent gap-1 font-[family-name:var(--font-mono)] text-[10px]">
+            <div className="w-2 h-2 rounded-full bg-accent" /> PICKUP
+          </Badge>
+          <Badge variant="outline" className="bg-background/90 backdrop-blur-sm gap-1 font-[family-name:var(--font-mono)] text-[10px]" style={{ borderColor: "#00D4AA40", color: "#00D4AA" }}>
+            <MapPin className="w-2.5 h-2.5" /> DROP
+          </Badge>
         </div>
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="animate-bounce">
-            <Truck className="w-8 h-8" style={{ color: "#00D4AA" }} />
+            <Truck className="w-8 h-8 md:w-10 md:h-10 drop-shadow-md" style={{ color: "#00D4AA" }} />
           </div>
         </div>
-        <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-lg"
-          style={{ background: "rgba(6,9,26,0.9)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <p style={{ color: "#F59E0B", fontFamily: "JetBrains Mono", fontSize: "0.72rem", fontWeight: 700 }}>
+        <div className="absolute bottom-4 right-4">
+          <Badge className="bg-background/90 backdrop-blur-sm text-accent hover:bg-background/90 font-[family-name:var(--font-mono)] text-xs shadow-sm border-border">
             {job.distance} · {job.eta}
-          </p>
+          </Badge>
         </div>
-      </div>
+      </Card>
 
-      {/* Job info */}
-      <div className="rounded-xl p-4 space-y-3" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center justify-between">
-          <span style={{ color: "#E4ECF7", fontFamily: "JetBrains Mono", fontWeight: 600, fontSize: "0.82rem" }}>{job.orderId}</span>
-          <span style={{ color: "#00D4AA", fontFamily: "Outfit", fontWeight: 800, fontSize: "1.1rem" }}>₹{job.payout}</span>
-        </div>
-        <div>
-          <p style={{ color: "#6B7FA0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>Customer</p>
-          <p style={{ color: "#E4ECF7", fontFamily: "DM Sans", fontWeight: 600 }}>{job.customer}</p>
-        </div>
-        <div>
-          <p style={{ color: "#6B7FA0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>Items</p>
-          <p style={{ color: "#A0B4D0", fontFamily: "DM Sans", fontSize: "0.82rem" }}>{job.items}</p>
-        </div>
-      </div>
-
-      {/* Status actions */}
-      <div className="rounded-xl p-4 space-y-3" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p style={{ color: "#E4ECF7", fontFamily: "Outfit", fontWeight: 700, fontSize: "0.9rem" }}>Delivery Progress</p>
-        {[
-          { key: "enroute", label: "En Route to Pickup", color: "#F59E0B" },
-          { key: "picked_up", label: "Mark Picked Up", color: "#3B82F6" },
-          { key: "completed", label: "Complete Delivery", color: "#00D4AA" },
-        ].map((step, i) => {
-          const statuses = ["enroute", "picked_up", "completed"];
-          const stepIdx = statuses.indexOf(step.key);
-          const currentIdx = statuses.indexOf(status);
-          const done = stepIdx < currentIdx;
-          const active = stepIdx === currentIdx;
-
-          return (
-            <button
-              key={step.key}
-              disabled={stepIdx !== currentIdx}
-              onClick={() => {
-                if (step.key === "picked_up") setStatus("picked_up");
-                if (step.key === "completed") setStatus("completed");
-              }}
-              className="w-full flex items-center gap-3 p-3 rounded-xl transition-all"
-              style={{
-                background: done ? "#00D4AA10" : active ? `${step.color}18` : "#111D38",
-                border: `1px solid ${done ? "#00D4AA30" : active ? `${step.color}40` : "rgba(255,255,255,0.05)"}`,
-                cursor: active ? "pointer" : "default",
-              }}
-            >
-              <div className="w-7 h-7 rounded-full flex items-center justify-center"
-                style={{ background: done ? "#00D4AA" : active ? step.color : "#162040" }}>
-                {done ? <CheckCircle2 className="w-4 h-4 text-white" /> : (
-                  <span style={{ color: active ? "white" : "#6B7FA0", fontFamily: "Outfit", fontWeight: 700, fontSize: "0.75rem" }}>{i + 1}</span>
-                )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+        {/* Job info */}
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <span className="font-[family-name:var(--font-mono)] text-sm font-semibold">{job.orderId}</span>
+              <span className="font-[family-name:var(--font-heading)] font-bold text-lg" style={{ color: "#00D4AA" }}>₹{job.payout}</span>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Customer</p>
+                <p className="text-sm font-medium">{job.customer}</p>
               </div>
-              <span style={{ color: done ? "#00D4AA" : active ? "#E4ECF7" : "#6B7FA0", fontFamily: "DM Sans", fontWeight: 600, fontSize: "0.875rem", flex: 1, textAlign: "left" }}>
-                {step.label}
-              </span>
-              {active && <ArrowRight className="w-4 h-4" style={{ color: step.color }} />}
-            </button>
-          );
-        })}
+              <Separator />
+              <div>
+                <p className="text-xs text-muted-foreground">Items</p>
+                <p className="text-sm">{job.items}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Status actions */}
+        <Card>
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base font-bold font-[family-name:var(--font-heading)]">Delivery Progress</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0 space-y-2">
+            {[
+              { key: "enroute", label: "En Route to Pickup", color: "var(--accent)" },
+              { key: "picked_up", label: "Mark Picked Up", color: "var(--info)" },
+              { key: "completed", label: "Complete Delivery", color: "#00D4AA" },
+            ].map((step, i) => {
+              const statuses = ["enroute", "picked_up", "completed"];
+              const stepIdx = statuses.indexOf(step.key);
+              const currentIdx = statuses.indexOf(status);
+              const done = stepIdx < currentIdx;
+              const active = stepIdx === currentIdx;
+
+              return (
+                <button
+                  key={step.key}
+                  disabled={stepIdx !== currentIdx}
+                  onClick={() => {
+                    if (step.key === "picked_up") setStatus("picked_up");
+                    if (step.key === "completed") setStatus("completed");
+                  }}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${active ? "hover-lift" : ""}`}
+                  style={{
+                    background: done ? "#00D4AA15" : active ? "var(--surface-2)" : "var(--surface-1)",
+                    border: `1px solid ${done ? "#00D4AA40" : active ? step.color : "var(--border)"}`,
+                    cursor: active ? "pointer" : "default",
+                    opacity: stepIdx > currentIdx ? 0.6 : 1,
+                  }}
+                  aria-label={step.label}
+                  role="button"
+                  tabIndex={stepIdx === currentIdx ? 0 : -1}
+                >
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors"
+                    style={{ background: done ? "#00D4AA" : active ? step.color : "var(--muted)" }}>
+                    {done ? <CheckCircle2 className="w-4 h-4 text-white" /> : (
+                      <span className="text-xs font-bold text-white font-[family-name:var(--font-heading)]">{i + 1}</span>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium flex-1 text-left"
+                    style={{ color: done ? "#00D4AA" : active ? "var(--foreground)" : "var(--muted-foreground)" }}>
+                    {step.label}
+                  </span>
+                  {active && <ArrowRight className="w-4 h-4" style={{ color: step.color }} />}
+                </button>
+              );
+            })}
+          </CardContent>
+        </Card>
       </div>
 
       {status === "completed" && (
-        <div className="rounded-xl p-4 text-center" style={{ background: "#00D4AA10", border: "1px solid #00D4AA30" }}>
-          <CheckCircle2 className="w-8 h-8 mx-auto mb-2" style={{ color: "#00D4AA" }} />
-          <p style={{ color: "#00D4AA", fontFamily: "Outfit", fontWeight: 700 }}>Delivery Completed!</p>
-          <p style={{ color: "#6B7FA0", fontSize: "0.78rem", fontFamily: "DM Sans" }}>₹{job.payout} will be credited within 24h</p>
-        </div>
+        <Card className="bg-success/10 border-success/30 animate-scale-in text-center">
+          <CardContent className="p-6">
+            <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-success" />
+            <p className="text-success font-[family-name:var(--font-heading)] font-bold text-lg">Delivery Completed!</p>
+            <p className="text-sm text-muted-foreground mt-1">₹{job.payout} will be credited within 24h</p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
@@ -324,68 +354,86 @@ function DriverChatPage() {
   const [messages, setMessages] = useState(driverChatMessages);
   const [input, setInput] = useState("");
   const quickReplies = ["I am at the gate", "Stuck in traffic", "On my way!", "Delivered successfully"];
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const send = (text: string) => {
-    setMessages((prev) => [...prev, { id: prev.length + 1, sender: "driver", text, time: new Date().toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }) }]);
+    if (!text.trim()) return;
+    setMessages((prev) => [...prev, { id: prev.length + 1, sender: "driver", text: text.trim(), time: new Date().toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }) }]);
     setInput("");
   };
 
   return (
-    <div className="max-w-sm mx-auto flex flex-col" style={{ minHeight: "520px" }}>
-      <div className="flex-1 rounded-xl overflow-hidden flex flex-col" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: "#FF6B00", fontFamily: "Outfit", fontWeight: 700, color: "white", fontSize: "0.8rem" }}>PS</div>
+    <div className="max-w-2xl mx-auto flex flex-col h-[520px] md:h-[600px] page-enter">
+      <Card className="flex-1 flex flex-col overflow-hidden">
+        <CardHeader className="flex flex-row items-center gap-3 p-4 border-b border-border space-y-0 bg-surface-1">
+          <Avatar className="w-10 h-10 border border-border">
+            <AvatarFallback className="bg-accent text-accent-foreground font-bold">PS</AvatarFallback>
+          </Avatar>
           <div>
-            <p style={{ color: "#E4ECF7", fontFamily: "DM Sans", fontWeight: 600, fontSize: "0.875rem" }}>Priya Sharma</p>
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              <p style={{ color: "#6B7FA0", fontSize: "0.7rem" }}>Customer · Online</p>
+            <CardTitle className="text-sm font-semibold">Priya Sharma</CardTitle>
+            <div className="flex items-center gap-1 mt-0.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+              <CardDescription className="text-[11px]">Customer · Online</CardDescription>
             </div>
           </div>
-        </div>
-        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+        </CardHeader>
+        
+        <CardContent className="flex-1 p-4 overflow-y-auto space-y-4" aria-live="polite">
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === "driver" ? "justify-end" : "justify-start"}`}>
-              <div className="max-w-[80%]">
-                <div className="px-3 py-2 rounded-2xl"
-                  style={{
-                    background: msg.sender === "driver" ? "#00D4AA" : "#162040",
-                    color: msg.sender === "driver" ? "#06091A" : "#E4ECF7",
-                    fontFamily: "DM Sans", fontSize: "0.875rem",
-                    borderRadius: msg.sender === "driver" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                  }}>
+            <div key={msg.id} className={`flex ${msg.sender === "driver" ? "justify-end" : "justify-start"} animate-fade-in-up`}>
+              <div className="max-w-[80%] md:max-w-[70%]">
+                <div className={`px-4 py-2.5 rounded-2xl text-sm ${msg.sender === "driver" ? "rounded-tr-sm text-black" : "rounded-tl-sm bg-surface-2 text-foreground"}`}
+                  style={msg.sender === "driver" ? { background: "#00D4AA" } : {}}>
                   {msg.text}
                 </div>
-                <p style={{ color: "#3B4A6B", fontSize: "0.65rem", fontFamily: "DM Sans", textAlign: msg.sender === "driver" ? "right" : "left", marginTop: "2px" }}>
+                <p className={`text-[10px] text-muted-foreground mt-1 ${msg.sender === "driver" ? "text-right" : "text-left"}`}>
                   {msg.time}
                 </p>
               </div>
             </div>
           ))}
-        </div>
+          <div ref={messagesEndRef} />
+        </CardContent>
+
         {/* Quick replies */}
-        <div className="px-3 py-2 flex gap-2 overflow-x-auto border-t" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+        <div className="px-4 py-2 flex gap-2 overflow-x-auto border-t border-border bg-surface-1 dark-scrollbar">
           {quickReplies.map((r) => (
-            <button key={r} onClick={() => send(r)}
-              className="px-2.5 py-1 rounded-full whitespace-nowrap text-xs flex-shrink-0"
-              style={{ background: "#162040", color: "#00D4AA", border: "1px solid #00D4AA30", fontFamily: "DM Sans" }}>
+            <Badge key={r} variant="outline" className="cursor-pointer whitespace-nowrap hover:bg-muted py-1 transition-colors"
+              style={{ color: "#00D4AA", borderColor: "#00D4AA40" }}
+              onClick={() => send(r)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === "Enter" && send(r)}
+            >
               {r}
-            </button>
+            </Badge>
           ))}
         </div>
-        <div className="flex gap-2 p-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send(input)}
+
+        <CardFooter className="p-3 border-t border-border bg-surface-1 flex gap-2">
+          <Input 
+            value={input} 
+            onChange={(e) => setInput(e.target.value)} 
+            onKeyDown={(e) => e.key === "Enter" && send(input)}
             placeholder="Message customer..."
-            className="flex-1 px-3 py-2 rounded-xl outline-none"
-            style={{ background: "#111D38", border: "1px solid rgba(255,255,255,0.07)", color: "#E4ECF7", fontFamily: "DM Sans", fontSize: "0.875rem" }} />
-          <button onClick={() => send(input)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: "#00D4AA" }}>
-            <Send className="w-4 h-4" style={{ color: "#06091A" }} />
-          </button>
-        </div>
-      </div>
+            className="flex-1 bg-background" 
+            aria-label="Message input"
+          />
+          <Button 
+            onClick={() => send(input)}
+            size="icon"
+            style={{ background: "#00D4AA", color: "black" }}
+            aria-label="Send message"
+            disabled={!input.trim()}
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
@@ -393,53 +441,66 @@ function DriverChatPage() {
 // Driver Wallet Page
 function DriverWalletPage() {
   return (
-    <div className="max-w-sm mx-auto space-y-4">
-      <div className="rounded-2xl p-5" style={{ background: "linear-gradient(135deg, #0C1225, #1A2240)", border: "1px solid rgba(0,212,170,0.2)" }}>
-        <div className="flex items-center gap-2 mb-2">
-          <Wallet className="w-4 h-4" style={{ color: "#00D4AA" }} />
-          <span style={{ color: "#6B7FA0", fontSize: "0.8rem", fontFamily: "DM Sans" }}>Driver Wallet</span>
-        </div>
-        <p style={{ color: "#00D4AA", fontFamily: "Outfit", fontWeight: 900, fontSize: "2rem" }}>₹1,840.00</p>
-        <p style={{ color: "#6B7FA0", fontSize: "0.72rem", fontFamily: "DM Sans" }}>80% of settled deliveries</p>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {[{ label: "Today", value: "₹639" }, { label: "Week", value: "₹4,210" }, { label: "Month", value: "₹18,400" }].map((s) => (
-            <div key={s.label} className="rounded-lg p-2 text-center" style={{ background: "rgba(0,212,170,0.08)" }}>
-              <p style={{ color: "#00D4AA", fontFamily: "Outfit", fontWeight: 700, fontSize: "0.875rem" }}>{s.value}</p>
-              <p style={{ color: "#6B7FA0", fontSize: "0.65rem", fontFamily: "DM Sans" }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-xl overflow-hidden" style={{ background: "#0C1225", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-          <p style={{ color: "#E4ECF7", fontFamily: "Outfit", fontWeight: 700 }}>Payout History</p>
-        </div>
-        {[
-          { job: "JOB-9041", amount: 639, date: "2026-07-28", status: "pending" },
-          { job: "JOB-9038", amount: 228, date: "2026-07-27", status: "credited" },
-          { job: "JOB-9025", amount: 144, date: "2026-07-27", status: "credited" },
-          { job: "JOB-9010", amount: 479, date: "2026-07-26", status: "credited" },
-        ].map((p, i) => (
-          <div key={p.job} className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t" : ""}`}
-            style={{ borderColor: "rgba(255,255,255,0.05)" }}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ background: p.status === "credited" ? "#00D4AA20" : "#F59E0B20" }}>
-              <TrendingUp className="w-4 h-4" style={{ color: p.status === "credited" ? "#00D4AA" : "#F59E0B" }} />
-            </div>
-            <div className="flex-1">
-              <p style={{ color: "#E4ECF7", fontFamily: "JetBrains Mono", fontSize: "0.78rem" }}>{p.job}</p>
-              <p style={{ color: "#6B7FA0", fontSize: "0.7rem", fontFamily: "DM Sans" }}>{p.date}</p>
-            </div>
-            <div className="text-right">
-              <p style={{ color: "#00D4AA", fontFamily: "Outfit", fontWeight: 700 }}>+₹{p.amount}</p>
-              <p style={{ color: p.status === "credited" ? "#00D4AA" : "#F59E0B", fontSize: "0.7rem", fontFamily: "DM Sans" }}>
-                {p.status}
-              </p>
-            </div>
+    <div className="max-w-2xl mx-auto space-y-4 md:space-y-6 page-enter">
+      <Card className="bg-gradient-to-br from-surface-1 to-surface-2 border border-border overflow-hidden">
+        <CardContent className="p-6 relative">
+          <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+            <Wallet className="w-32 h-32" style={{ color: "#00D4AA" }} />
           </div>
-        ))}
-      </div>
+          <div className="flex items-center gap-2 mb-2">
+            <Wallet className="w-4 h-4" style={{ color: "#00D4AA" }} />
+            <span className="text-sm font-medium text-muted-foreground">Driver Wallet</span>
+          </div>
+          <p className="text-4xl md:text-5xl font-bold font-[family-name:var(--font-heading)] tracking-tight" style={{ color: "#00D4AA" }}>
+            ₹1,840.00
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">80% of settled deliveries</p>
+          
+          <div className="mt-6 grid grid-cols-3 gap-3 md:gap-4">
+            {[{ label: "Today", value: "₹639" }, { label: "Week", value: "₹4,210" }, { label: "Month", value: "₹18,400" }].map((s) => (
+              <div key={s.label} className="rounded-xl p-3 text-center border border-border bg-background/50 backdrop-blur-sm shadow-sm hover-lift transition-transform">
+                <p className="font-bold text-base md:text-lg font-[family-name:var(--font-heading)]" style={{ color: "#00D4AA" }}>{s.value}</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground mt-1 uppercase tracking-wider">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="px-4 py-3 border-b border-border bg-surface-1">
+          <CardTitle className="text-sm font-bold font-[family-name:var(--font-heading)]">Payout History</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y divide-border stagger-children">
+            {[
+              { job: "JOB-9041", amount: 639, date: "2026-07-28", status: "pending" },
+              { job: "JOB-9038", amount: 228, date: "2026-07-27", status: "credited" },
+              { job: "JOB-9025", amount: 144, date: "2026-07-27", status: "credited" },
+              { job: "JOB-9010", amount: 479, date: "2026-07-26", status: "credited" },
+            ].map((p, i) => (
+              <div key={p.job} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: p.status === "credited" ? "#00D4AA20" : "var(--accent)/20" }}>
+                  <TrendingUp className="w-4 h-4" style={{ color: p.status === "credited" ? "#00D4AA" : "var(--accent)" }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-[family-name:var(--font-mono)] text-sm font-medium text-foreground truncate">{p.job}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{p.date}</p>
+                </div>
+                <div className="text-right whitespace-nowrap">
+                  <p className="font-bold text-sm font-[family-name:var(--font-heading)]" style={{ color: p.status === "credited" ? "#00D4AA" : "var(--foreground)" }}>
+                    +₹{p.amount}
+                  </p>
+                  <Badge variant="outline" className={`text-[10px] mt-1 capitalize ${p.status === "credited" ? "text-[#00D4AA] border-[#00D4AA]/30" : "text-accent border-accent/30"}`}>
+                    {p.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
