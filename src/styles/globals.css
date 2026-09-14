@@ -151,10 +151,10 @@ html {
 
 /* ── Gradient text utility ── */
 .text-gradient {
-  background: linear-gradient(90deg, #38BDF8 0%, #7C3AED 35%, #D946EF 70%, #F59E0B 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
+  
+  
+  
 }
 
 /* ── Page content animation ── */
@@ -187,3 +187,9 @@ html {
   color: var(--muted-foreground);
   gap: 0.75rem;
 }
+
+.bg-grad-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+.bg-grad { color: var(--primary); }
+.bg-grad-hero { background: radial-gradient(circle at top left,#3B2C85 0%,transparent 35%),radial-gradient(circle at bottom center,#4C1D95 0%,transparent 40%),radial-gradient(circle at right,#0F766E 0%,transparent 30%),var(--background); }
+.bg-dark-card { background: #141B2D; }
+
