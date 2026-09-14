@@ -1,0 +1,109 @@
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
+graph TD
+    %% Define Styling
+    classDef client fill:#3498db,stroke:#2980b9,stroke-width:2px,color:white;
+    classDef edge fill:#e67e22,stroke:#d35400,stroke-width:2px,color:white;
+    classDef service fill:#2ecc71,stroke:#27ae60,stroke-width:2px,color:white;
+    classDef datastore fill:#9b59b6,stroke:#8e44ad,stroke-width:2px,color:white;
+    classDef broker fill:#e74c3c,stroke:#c0392b,stroke-width:2px,color:white;
+    classDef external fill:#7f8c8d,stroke:#2c3e50,stroke-width:2px,color:white;
+
+    %% External & Clients
+    subgraph Clients["📱 Client Applications"]
+        CustomerApp["Customer App (Web/Mobile)"]:::client
+        ProviderApp["Provider App (Web/Mobile)"]:::client
+        AdminDash["Admin Dashboard"]:::client
+    end
+
+    ExternalPG["External Payment Gateway (Razorpay)"]:::external
+
+    %% Edge & Security Layer
+    subgraph Edge["🛡️ Edge & Security Layer"]
+        Gateway["api-gateway<br/>(HTTP Proxy & Load Balancer)"]:::edge
+        Auth["Supabase GoTrue<br/>(JWT Authentication)"]:::edge
+    end
+
+    %% Event Broker & Databases
+    subgraph Infrastructure["⚙️ Data & Event Infrastructure"]
+        Kafka{"Apache Kafka<br/>(Event Bus / Sagas)"}:::broker
+        Zookeeper("Zookeeper<br/>(Broker Config)"):::broker
+        Postgres[("PostgreSQL<br/>(Relational DB)")]:::datastore
+        Redis[("Redis<br/>(Geo-Spatial & Cache)")]:::datastore
+    end
+
+    %% Comms & Realtime
+    subgraph Comms["📡 Communications & Real-Time"]
+        WebsocketSvc["websocket-service<br/>(Socket.io Push)"]:::service
+        ChatSvc["chat-service<br/>(Live Messaging)"]:::service
+        NotificationSvc["notification-service<br/>(Email / SMS Alerts)"]:::service
+    end
+
+    %% Core Business Services
+    subgraph Core["📦 Core Business Services"]
+        OrderSvc["order-service<br/>(Order Lifecycle)"]:::service
+        DispatchSvc["dispatch-service<br/>(Worker Matching)"]:::service
+        CatalogSvc["catalog-service<br/>(Service Inventory)"]:::service
+        UserSvc["user-service<br/>(Profiles & Roles)"]:::service
+    end
+
+    %% Finance Services
+    subgraph Finance["💸 Finance & Monetization"]
+        PricingSvc["pricing-service<br/>(Surge & Coupons)"]:::service
+        PaymentSvc["payment-service<br/>(Webhooks & Settlement)"]:::service
+        LedgerSvc["ledger-service<br/>(Digital Wallets)"]:::service
+    end
+
+    %% Compliance Services
+    subgraph Compliance["⚖️ Compliance & Quality"]
+        KYCSvc["kyc-service<br/>(Background Checks)"]:::service
+        ReviewSvc["review-service<br/>(1-5 Star Ratings)"]:::service
+        AuditSvc["audit-service<br/>(Immutable Black Box)"]:::service
+    end
+
+    %% --- Connections ---
+
+    %% Client Interactions
+    Clients -->|REST API Calls| Gateway
+    Clients <-->|Real-time Socket| WebsocketSvc
+    Clients <-->|Real-time Socket| ChatSvc
+
+    %% Edge Routing & Auth
+    Gateway -->|Verify JWT| Auth
+    Gateway -->|Reverse Proxy Routes| Core
+    Gateway -->|Reverse Proxy Routes| Finance
+    Gateway -->|Reverse Proxy Routes| Compliance
+
+    %% External Webhooks
+    ExternalPG -->|Payment Webhooks| Gateway
+
+    %% Infrastructure Dependencies
+    Kafka --- Zookeeper
+
+    %% Database Connections (All services use Postgres)
+    Core -.->|Read/Write Data| Postgres
+    Finance -.->|Read/Write Data| Postgres
+    Compliance -.->|Read/Write Data| Postgres
+    Comms -.->|Read/Write Data| Postgres
+
+    %% Specific Redis usage
+    DispatchSvc -->|GEORADIUS Queries| Redis
+
+    %% Kafka Publishers (Saga Choreography)
+    OrderSvc ==>|Publish: OrderCreated/Cancelled| Kafka
+    PricingSvc ==>|Publish: PriceCalculated| Kafka
+    PaymentSvc ==>|Publish: PaymentSucceeded/Failed| Kafka
+    DispatchSvc ==>|Publish: WorkerDispatched/Failed| Kafka
+    KYCSvc ==>|Publish: KYCApproved/Rejected| Kafka
+    ReviewSvc ==>|Publish: ReviewSubmitted| Kafka
+
+    %% Kafka Consumers (Saga Reactions)
+    Kafka ==>|Consume: Dispatch events| OrderSvc
+    Kafka ==>|Consume: Payment events| LedgerSvc
+    Kafka ==>|Consume: OrderCreated| PricingSvc
+    Kafka ==>|Consume: PriceCalculated| PaymentSvc
+    Kafka ==>|Consume: PaymentSucceeded| DispatchSvc
+
+    %% Global Kafka Consumers
+    Kafka ==>|Consume: ALL EVENTS for History| AuditSvc
+    Kafka ==>|Consume: Relevant UI events| WebsocketSvc
+    Kafka ==>|Consume: Alert triggers| NotificationSvc

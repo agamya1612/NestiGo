@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model catalog_items {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id           String   @db.Uuid
+  name                  String
+  description           String?
+  price                 Decimal  @db.Decimal(10, 2)
+  unit                  String
+  requires_prescription Boolean  @default(false)
+  active                Boolean  @default(true)
+  created_at            DateTime @default(now()) @db.Timestamptz
+  updated_at            DateTime @default(now()) @db.Timestamptz
+
+  order_items order_items[]
+}
+
+model provider_profiles {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @unique @db.Uuid
+  kyc_status String?  @default("pending")
+  city       String?
+  zones      Json     @default("[]")
+  rating     Decimal? @default(0.0) @db.Decimal(3, 2)
+  active     Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @db.Timestamptz
+
+  provider_assignments provider_assignments[]
+}
+
+model orders {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id         String    @db.Uuid
+  order_type          String
+  status              order_status    @default(pending_payment)
+  amount_total        Decimal         @db.Decimal(10, 2)
+  currency            String          @default("INR")
+  razorpay_order_id   String?         @unique
+  razorpay_payment_id String?         @unique
+  address             Json
+  scheduled_at        DateTime?       @db.Timestamptz
+  prescription_status prescription_status @default(n_a)
+  created_at          DateTime  @default(now()) @db.Timestamptz
+  updated_at          DateTime  @default(now()) @db.Timestamptz
+
+  order_items          order_items[]
+  order_status_history order_status_history[]
+  provider_assignments provider_assignments[]
+}
+
+model order_items {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id        String   @db.Uuid
+  catalog_item_id String   @db.Uuid
+  quantity        Int
+  unit_price      Decimal  @db.Decimal(10, 2)
+  provider_id     String?  @db.Uuid
+
+  order        orders         @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  catalog_item catalog_items  @relation(fields: [catalog_item_id], references: [id], onDelete: Restrict)
+}
+
+model order_status_history {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id   String   @db.Uuid
+  status     order_status
+  changed_by String?  @db.Uuid
+  changed_at DateTime @default(now()) @db.Timestamptz
+
+  order orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
+}
+
+model provider_assignments {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id     String    @db.Uuid
+  provider_id  String    @db.Uuid
+  status       assignment_status    @default(offered)
+  offered_at   DateTime  @default(now()) @db.Timestamptz
+  responded_at DateTime? @db.Timestamptz
+
+  order    orders             @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  provider provider_profiles  @relation(fields: [provider_id], references: [id], onDelete: Cascade)
+
+  @@unique([order_id, provider_id])
+}
+
+enum order_status {
+  pending_payment
+  paid
+  confirmed
+  picked_up
+  in_progress
+  completed
+  cancelled
+  refunded
+}
+
+enum prescription_status {
+  n_a @map("n/a")
+  pending
+  verified
+  rejected
+}
+
+enum assignment_status {
+  offered
+  accepted
+  declined
+  expired
+  picked_up
+  completed
+}

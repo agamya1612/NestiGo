@@ -1,0 +1,10 @@
+{
+  "name": "nestigo-stress-tests",
+  "version": "1.0.0",
+  "description": "Stress testing and chaos engineering suite for NestiGo",
+  "scripts": {
+    "test:load": "docker run --rm -i -e API_URL=http://host.docker.internal:3000 grafana/k6 run - < k6-load-test.js",
+    "test:chaos": "node chaos.js",
+    "test:all": "npx -y concurrently \"npm run test:chaos\" \"npm run test:load\""
+  }
+}
