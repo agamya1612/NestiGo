@@ -11,14 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Label } from "@/app/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/app/components/ui/dialog";
 
-// ─── Design Tokens ────────────────────────────────────────────────────────────
-const C = {
-  primary: "#7C3AED", pink: "#D946EF", orange: "#F59E0B", blue: "#38BDF8", cyan: "#06B6D4", success: "#22C55E", danger: "#EF4444", dark: "#0B1020", darkCard: "#141B2D", heading: "#111827", body: "#4B5563", secondary: "#6B7280", muted: "#9CA3AF", border: "#E5E7EB", bg: "#FFFFFF", bgLight: "#F8FAFC", section: "#F1F5F9", price: "#7C3AED", offer: "#EC4899", discount: "#22C55E", star: "#FBBF24",
-  grad: "linear-gradient(90deg,#38BDF8 0%,#7C3AED 35%,#D946EF 70%,#F59E0B 100%)", gradPrimary: "linear-gradient(135deg,#7C3AED,#D946EF)", gradHero: "radial-gradient(circle at top left,#3B2C85 0%,transparent 35%),radial-gradient(circle at bottom center,#4C1D95 0%,transparent 40%),radial-gradient(circle at right,#0F766E 0%,transparent 30%),#0B1020"
-};
-const DARK_C = { ...C, bg: "#0B1020", bgLight: "#141B2D", section: "#1A2235", darkCard: "#0D1424", heading: "#F8FAFC", body: "#CBD5E1", secondary: "#94A3B8", muted: "#64748B", border: "#2C3244" };
-const DarkCtx = createContext(false);
-const useC = () => { const d = useContext(DarkCtx); return d ? DARK_C : C; };
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const VERTICAL_META: Record<string, any> = {
@@ -94,7 +86,7 @@ const uimg = (id: string, w = 400, h = 300) => `https://images.unsplash.com/${id
 
 function VertIcon({ meta, size = "md" }: { meta: any; size?: "sm" | "md" }) {
   const px = size === "sm" ? "w-2.5 h-2.5" : "w-5 h-5";
-  if (meta.customImg) return <img src={meta.customImg} alt={meta.label} className={`${px} object-contain`} />;
+  if (meta.customImg) return <img src={meta.customImg} alt={meta.label} className={`${px} object-contain`}  loading="lazy" />;
   const Icon = meta.icon;
   return <Icon className={px} style={{ color: meta.color }} />;
 }
@@ -127,7 +119,6 @@ const MOCK_LOCATIONS = [
 
 // ─── Top Navbar ───────────────────────────────────────────────────────────────
 function TopNav({ activePage, setPage, cartCount, searchQ, setSearchQ }: any) {
-  const C = useC();
   const [location, setLocation] = useState("Indiranagar");
   const [isDetecting, setIsDetecting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -166,10 +157,10 @@ function TopNav({ activePage, setPage, cartCount, searchQ, setSearchQ }: any) {
     <header className="sticky top-0 z-50 w-full bg-background border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 h-16 flex items-center gap-4">
         <button onClick={() => setPage("home")} className="flex items-center gap-2 flex-shrink-0" aria-label="Go home">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: C.gradPrimary }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-grad-primary">
             <Zap className="w-4 h-4 text-white" fill="white" />
           </div>
-          <span className="font-heading font-extrabold text-lg tracking-tight" style={{ background: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          <span className="font-heading font-extrabold text-lg tracking-tight text-gradient">
             NestiGo
           </span>
         </button>
@@ -211,7 +202,7 @@ function TopNav({ activePage, setPage, cartCount, searchQ, setSearchQ }: any) {
             <div className="max-h-[320px] overflow-y-auto bg-background">
                {filteredLocations.length > 0 ? (
                  filteredLocations.map((loc, i) => (
-                   <div 
+                   <div role="button" tabIndex={0} 
                      key={i} 
                      onClick={() => { setLocation(loc.title); setIsDialogOpen(false); }}
                      className="flex items-start gap-4 p-4 border-b border-border last:border-0 hover:bg-surface-1 cursor-pointer transition-colors"
@@ -258,11 +249,11 @@ function TopNav({ activePage, setPage, cartCount, searchQ, setSearchQ }: any) {
             <Bell className="w-4 h-4 text-muted-foreground" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive" />
           </Button>
-          <Button variant={cartCount > 0 ? "default" : "outline"} onClick={() => setPage("cart")} className={`relative flex items-center gap-2 px-3 py-2 rounded-xl transition-all h-9 ${cartCount > 0 ? 'shadow-primary' : 'bg-surface-2 border-border'}`} style={cartCount > 0 ? { background: C.gradPrimary } : {}} aria-label="Cart">
+          <Button variant={cartCount > 0 ? "default" : "outline"} onClick={() => setPage("cart")} className={`relative flex items-center gap-2 px-3 py-2 rounded-xl transition-all h-9 ${cartCount > 0 ? 'shadow-primary' : 'bg-surface-2 border-border'} ${ cartCount > 0 ? "bg-grad-primary text-white shadow-primary" : "bg-surface-2 border-border text-muted-foreground" }`} aria-label="Cart">
             <ShoppingCart className={`w-4 h-4 ${cartCount > 0 ? "text-white" : "text-muted-foreground"}`} />
             {cartCount > 0 && <span className="text-white font-heading font-bold text-xs">{cartCount}</span>}
           </Button>
-          <Button onClick={() => setPage("profile")} className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm ml-1 p-0 shadow-primary" style={{ background: C.gradPrimary }} aria-label="Profile">
+          <Button onClick={() => setPage("profile")} className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm ml-1 p-0 shadow-primary bg-grad-primary" aria-label="Profile">
             JD
           </Button>
         </div>
@@ -296,8 +287,8 @@ function BottomNav({ active, setActive, cartCount }: any) {
 }
 
 // ─── Home Page ────────────────────────────────────────────────────────────────
-function HomePage({ setPage, setActiveVertical }: any) {
-  const C = useC();
+
+function HeroCarousel({ setActiveVertical, setPage }: any) {
   const [activeBanner, setActiveBanner] = useState(0);
   const [bannerPaused, setBannerPaused] = useState(false);
   const banners = [
@@ -315,35 +306,41 @@ function HomePage({ setPage, setActiveVertical }: any) {
   }, [bannerPaused, banners.length]);
 
   return (
+    <div className="relative rounded-2xl overflow-hidden cursor-pointer h-[240px]" role="button" tabIndex={0}
+      onClick={() => { setActiveVertical(banners[activeBanner].vertical); setPage("store"); }}
+      onKeyDown={(e) => { if(e.key === 'Enter') { setActiveVertical(banners[activeBanner].vertical); setPage("store"); } }}
+      onMouseEnter={() => setBannerPaused(true)} onMouseLeave={() => setBannerPaused(false)}>
+      <img src={uimg(banners[activeBanner].img, 900, 480)} alt={banners[activeBanner].title} className="w-full h-full object-cover transition-all duration-500" loading="lazy" />
+      <div className="absolute inset-0" style={{ background: banners[activeBanner].tint }} />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)" }} />
+      <div className="absolute bottom-0 left-0 right-0 p-6">
+        <Badge className="bg-white text-primary mb-2 font-body font-bold">{banners[activeBanner].badge}</Badge>
+        <h3 className="text-white font-heading font-extrabold text-2xl leading-tight">{banners[activeBanner].title}</h3>
+        <p className="text-white/80 font-body text-sm mt-1 mb-3">{banners[activeBanner].subtitle}</p>
+        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm bg-white/20 text-white backdrop-blur-md font-body">Order Now <ArrowRight className="w-3.5 h-3.5" /></span>
+      </div>
+      <div role="button" tabIndex={0} className="absolute bottom-4 right-4 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+        {banners.map((_, i) => (
+          <button key={i} onClick={() => { setActiveBanner(i); setBannerPaused(true); setTimeout(() => setBannerPaused(false), 5000); }} aria-label={`Banner ${i}`} className="rounded-full transition-all" style={{ width: i === activeBanner ? "20px" : "7px", height: "7px", background: i === activeBanner ? "white" : "rgba(255,255,255,0.4)" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HomePage({ setPage, setActiveVertical }: any) {
+  return (
     <div className="page-enter max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 pb-24 lg:pb-10">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
-          <div className="relative rounded-2xl overflow-hidden cursor-pointer h-[240px]" role="button" tabIndex={0}
-            onClick={() => { setActiveVertical(banners[activeBanner].vertical); setPage("store"); }}
-            onKeyDown={(e) => { if(e.key === 'Enter') { setActiveVertical(banners[activeBanner].vertical); setPage("store"); } }}
-            onMouseEnter={() => setBannerPaused(true)} onMouseLeave={() => setBannerPaused(false)}>
-            <img src={uimg(banners[activeBanner].img, 900, 480)} alt={banners[activeBanner].title} className="w-full h-full object-cover transition-all duration-500" />
-            <div className="absolute inset-0" style={{ background: banners[activeBanner].tint }} />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)" }} />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <Badge className="bg-white text-primary mb-2 font-body font-bold">{banners[activeBanner].badge}</Badge>
-              <h3 className="text-white font-heading font-extrabold text-2xl leading-tight">{banners[activeBanner].title}</h3>
-              <p className="text-white/80 font-body text-sm mt-1 mb-3">{banners[activeBanner].subtitle}</p>
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm bg-white/20 text-white backdrop-blur-md font-body">Order Now <ArrowRight className="w-3.5 h-3.5" /></span>
-            </div>
-            <div className="absolute bottom-4 right-4 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-              {banners.map((_, i) => (
-                <button key={i} onClick={() => { setActiveBanner(i); setBannerPaused(true); setTimeout(() => setBannerPaused(false), 5000); }} aria-label={`Banner ${i}`} className="rounded-full transition-all" style={{ width: i === activeBanner ? "20px" : "7px", height: "7px", background: i === activeBanner ? "white" : "rgba(255,255,255,0.4)" }} />
-              ))}
-            </div>
-          </div>
+          <HeroCarousel setActiveVertical={setActiveVertical} setPage={setPage} />
         </div>
         <div className="grid grid-cols-5 lg:grid-cols-1 gap-2 stagger-children">
           {VERTICAL_ORDER.map((key) => { const meta = VERTICAL_META[key];
             return (
-              <Card key={key} onClick={() => { setActiveVertical(key); setPage("store"); }} className="flex lg:flex-row items-center gap-2 lg:gap-3 p-2.5 lg:p-3 rounded-xl transition-all hover-lift cursor-pointer bg-background border-border shadow-xs">
+              <Card role="button" tabIndex={0} key={key} onClick={() => { setActiveVertical(key); setPage("store"); }} className="flex lg:flex-row items-center gap-2 lg:gap-3 p-2.5 lg:p-3 rounded-xl transition-all hover-lift cursor-pointer bg-background border-border shadow-xs">
                 <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
-                  <img src={uimg(meta.unsplash, 80, 80)} alt={meta.label} className="w-full h-full object-cover" />
+                  <img src={uimg(meta.unsplash, 80, 80)} alt={meta.label} className="w-full h-full object-cover"  loading="lazy" />
                 </div>
                 <div className="hidden lg:block text-left min-w-0">
                   <p className="text-foreground font-body font-semibold text-[0.82rem]">{meta.label}</p>
@@ -356,13 +353,13 @@ function HomePage({ setPage, setActiveVertical }: any) {
         </div>
       </div>
 
-      <div className="mb-8 p-px rounded-2xl overflow-hidden" style={{ background: C.grad }}>
-        <div className="px-5 py-3.5 rounded-2xl flex items-center gap-3 bg-darkCard" style={{ background: C.darkCard }}>
+      <div className="mb-8 p-px rounded-2xl overflow-hidden bg-grad">
+        <div className="px-5 py-3.5 rounded-2xl flex items-center gap-3 bg-darkCard bg-dark-card">
           <Sparkles className="w-5 h-5 flex-shrink-0 text-orange-500" />
           <p className="text-white font-body font-semibold text-sm flex-1">
             Use code <strong className="text-orange-500">WELCOME10</strong> — 10% off on your first order · Min ₹199
           </p>
-          <Button size="sm" className="font-bold font-body text-white shadow-primary" style={{ background: C.gradPrimary }}>COPY</Button>
+          <Button size="sm" className="font-bold font-body text-white shadow-primary bg-grad-primary">COPY</Button>
         </div>
       </div>
 
@@ -374,9 +371,9 @@ function HomePage({ setPage, setActiveVertical }: any) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 stagger-children">
           {VERTICAL_ORDER.map((key) => { const meta = VERTICAL_META[key];
             return (
-              <Card key={key} onClick={() => { setActiveVertical(key); setPage("store"); }} className="overflow-hidden text-left transition-all hover-lift cursor-pointer bg-background border-border shadow-sm">
+              <Card role="button" tabIndex={0} key={key} onClick={() => { setActiveVertical(key); setPage("store"); }} className="overflow-hidden text-left transition-all hover-lift cursor-pointer bg-background border-border shadow-sm">
                 <div className="h-32 overflow-hidden">
-                  <img src={uimg(meta.unsplash, 800, 512)} alt={meta.label} className="w-full h-full object-cover" />
+                  <img src={uimg(meta.unsplash, 800, 512)} alt={meta.label} className="w-full h-full object-cover"  loading="lazy" />
                 </div>
                 <div className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
@@ -444,8 +441,8 @@ function SearchPage({ q, setQ, setPage, setActiveVertical }: any) {
             <div className="space-y-2 stagger-children">
               {VERTICAL_ORDER.map((key) => { const meta = VERTICAL_META[key];
                 return (
-                  <Card key={key} onClick={() => { setActiveVertical(key); setPage("store"); }} className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover-lift cursor-pointer bg-background border-border shadow-xs">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0"><img src={uimg(meta.unsplash, 80, 80)} alt={meta.label} className="w-full h-full object-cover" /></div>
+                  <Card role="button" tabIndex={0} key={key} onClick={() => { setActiveVertical(key); setPage("store"); }} className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover-lift cursor-pointer bg-background border-border shadow-xs">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0"><img src={uimg(meta.unsplash, 80, 80)} alt={meta.label} className="w-full h-full object-cover"  loading="lazy" /></div>
                     <div className="flex-1"><p className="text-foreground font-body font-semibold text-sm">{meta.label}</p><p className="text-muted-foreground text-[0.7rem] font-body">{meta.deliveryTime}</p></div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </Card>
@@ -466,8 +463,8 @@ function SearchPage({ q, setQ, setPage, setActiveVertical }: any) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
               {results.map((item) => (
-                <Card key={item.id} onClick={() => { setActiveVertical(item.vertical); setPage("store"); }} className="flex items-center gap-3 p-3 rounded-xl text-left hover-lift cursor-pointer bg-background border-border shadow-xs">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0"><img src={uimg(item.img, 112, 112)} alt={item.name} className="w-full h-full object-cover" /></div>
+                <Card role="button" tabIndex={0} key={item.id} onClick={() => { setActiveVertical(item.vertical); setPage("store"); }} className="flex items-center gap-3 p-3 rounded-xl text-left hover-lift cursor-pointer bg-background border-border shadow-xs">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0"><img src={uimg(item.img, 112, 112)} alt={item.name} className="w-full h-full object-cover"  loading="lazy" /></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-foreground font-body font-semibold text-sm truncate">{item.name}</p>
                     <p className="text-muted-foreground text-[0.7rem] font-body">{item.unit}</p>
@@ -485,7 +482,6 @@ function SearchPage({ q, setQ, setPage, setActiveVertical }: any) {
 
 // ─── Store Page ─────────────────────────────────────────────────────────────
 function StorePage({ vertical, cart, setCart, setPage }: any) {
-  const C = useC();
   const [activeV, setActiveV] = useState(vertical);
   const [search, setSearch] = useState("");
   const meta = VERTICAL_META[activeV];
@@ -500,7 +496,7 @@ function StorePage({ vertical, cart, setCart, setPage }: any) {
   return (
     <div className="page-enter max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pb-24 lg:pb-10">
       <div className="relative rounded-2xl overflow-hidden mb-6 h-[200px]">
-        <img src={uimg(meta.unsplash, 1400, 400)} alt={meta.label} className="w-full h-full object-cover" />
+        <img src={uimg(meta.unsplash, 1400, 400)} alt={meta.label} className="w-full h-full object-cover"  loading="lazy" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to right,rgba(11,16,32,0.75) 40%,transparent)" }} />
         <Button variant="outline" size="icon" onClick={() => setPage("home")} className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/90 border-none shadow-sm" aria-label="Back">
           <ChevronLeft className="w-5 h-5 text-gray-900" />
@@ -554,7 +550,7 @@ function StorePage({ vertical, cart, setCart, setPage }: any) {
                   <Card key={item.id} className="overflow-hidden transition-all hover-lift bg-background border-border shadow-sm flex flex-col justify-between">
                     <div>
                       <div className="relative h-32">
-                        <img src={uimg(item.img, 320, 256)} alt={item.name} className="w-full h-full object-cover" />
+                        <img src={uimg(item.img, 320, 256)} alt={item.name} className="w-full h-full object-cover"  loading="lazy" />
                         {discount > 0 && <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600 text-white font-body font-bold text-[0.65rem] px-1.5 py-0">{discount}% OFF</Badge>}
                         {item.rx && <Badge className="absolute top-2 right-2 bg-orange-500 hover:bg-orange-600 text-white font-body font-bold text-[0.65rem] px-1.5 py-0">Rx</Badge>}
                       </div>
@@ -572,12 +568,12 @@ function StorePage({ vertical, cart, setCart, setPage }: any) {
                         {discount > 0 && <p className="text-muted-foreground text-[0.65rem] font-body line-through">₹{item.mrp}</p>}
                       </div>
                       {q === 0 ? (
-                        <Button size="sm" onClick={() => addToCart(item)} className="rounded-xl font-bold font-body text-xs shadow-primary text-white" style={{ background: C.gradPrimary }}>ADD</Button>
+                        <Button size="sm" onClick={() => addToCart(item)} className="rounded-xl font-bold font-body text-xs shadow-primary text-white bg-grad-primary">ADD</Button>
                       ) : (
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl" style={{ background: C.gradPrimary }}>
-                          <button onClick={() => removeFromCart(item.id)} className="w-5 h-5 flex items-center justify-center" aria-label="Decrease quantity"><Minus className="w-3 h-3 text-white" /></button>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-grad-primary">
+                          <button onClick={() => removeFromCart(item.id)} className="w-10 h-10 flex items-center justify-center active:scale-95 transition-transform" aria-label="Decrease quantity"><Minus className="w-3 h-3 text-white" /></button>
                           <span className="text-white font-heading font-bold text-[0.85rem] min-w-[16px] text-center">{q}</span>
-                          <button onClick={() => addToCart(item)} className="w-5 h-5 flex items-center justify-center" aria-label="Increase quantity"><Plus className="w-3 h-3 text-white" /></button>
+                          <button onClick={() => addToCart(item)} className="w-10 h-10 flex items-center justify-center active:scale-95 transition-transform" aria-label="Increase quantity"><Plus className="w-3 h-3 text-white" /></button>
                         </div>
                       )}
                     </div>
@@ -590,7 +586,7 @@ function StorePage({ vertical, cart, setCart, setPage }: any) {
       </div>
       {cartCount > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
-          <Button onClick={() => setPage("cart")} className="flex items-center gap-4 px-6 py-6 rounded-2xl shadow-xl transition-all hover:scale-105" style={{ background: C.gradPrimary }}>
+          <Button onClick={() => setPage("cart")} className="flex items-center gap-4 px-6 py-6 rounded-2xl shadow-xl transition-all hover:scale-105 bg-grad-primary">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/20"><ShoppingCart className="w-4 h-4 text-white" /></div>
             <span className="text-white font-body font-bold text-sm">{cartCount} item{cartCount > 1 ? "s" : ""} in cart</span>
             <span className="text-white font-heading font-black text-lg ml-2">₹{cartTotal}</span>
@@ -604,7 +600,6 @@ function StorePage({ vertical, cart, setCart, setPage }: any) {
 
 // ─── Cart Page ────────────────────────────────────────────────────────────────
 function CartPage({ cart, setCart, setPage }: any) {
-  const C = useC();
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState(false);
   const subtotal = cart.reduce((s: number, i: any) => s + i.price * i.quantity, 0);
@@ -621,7 +616,7 @@ function CartPage({ cart, setCart, setPage }: any) {
           </div>
           <p className="text-foreground font-heading font-bold text-xl">Cart is empty</p>
           <p className="text-muted-foreground font-body mt-1">Add items to get started</p>
-          <Button onClick={() => setPage("home")} className="mt-5 rounded-2xl font-bold px-8 shadow-primary" size="lg" style={{ background: C.gradPrimary }}>Start Shopping</Button>
+          <Button onClick={() => setPage("home")} className="mt-5 rounded-2xl font-bold px-8 shadow-primary bg-grad-primary" size="lg">Start Shopping</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -651,7 +646,7 @@ function CartPage({ cart, setCart, setPage }: any) {
               </div>
               <div className="flex gap-2">
                 <Input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="Try WELCOME10" className="flex-1 rounded-xl bg-surface-1 border-border text-foreground font-mono" />
-                <Button onClick={() => coupon === "WELCOME10" && setApplied(true)} className={`rounded-xl font-bold ${applied ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'text-white shadow-primary'}`} variant={applied ? "secondary" : "default"} style={!applied ? { background: C.gradPrimary } : {}}>{applied ? "Applied ✓" : "Apply"}</Button>
+                <Button onClick={() => coupon === "WELCOME10" && setApplied(true)} className={`rounded-xl font-bold ${applied ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'text-white shadow-primary bg-grad-primary'}`} variant={applied ? "secondary" : "default"}>{applied ? "Applied ✓" : "Apply"}</Button>
               </div>
               {applied && <p className="text-green-500 text-xs font-body mt-2">🎉 10% discount applied!</p>}
             </Card>
@@ -668,7 +663,7 @@ function CartPage({ cart, setCart, setPage }: any) {
                   <span className="text-primary font-heading font-black text-xl">₹{total}</span>
                 </div>
               </div>
-              <Button onClick={() => setPage("checkout")} className="w-full py-6 rounded-2xl font-bold mt-5 text-white shadow-primary" style={{ background: C.gradPrimary }}>Proceed to Checkout</Button>
+              <Button onClick={() => setPage("checkout")} className="w-full py-6 rounded-2xl font-bold mt-5 text-white shadow-primary bg-grad-primary">Proceed to Checkout</Button>
             </Card>
           </div>
         </div>
@@ -679,7 +674,6 @@ function CartPage({ cart, setCart, setPage }: any) {
 
 // ─── Checkout Page ────────────────────────────────────────────────────────────
 function CheckoutPage({ cart, setPage, setCart }: any) {
-  const C = useC();
   const [step, setStep] = useState<"address" | "payment" | "success">("address");
   const total = cart.reduce((s: number, i: any) => s + i.price * i.quantity, 0);
   const needsRx = cart.some((c: any) => c.rx);
@@ -700,7 +694,7 @@ function CheckoutPage({ cart, setPage, setCart }: any) {
           <p className="text-foreground font-heading font-bold text-lg">30–45 minutes</p>
         </div>
         <div className="flex gap-3 mt-5">
-          <Button onClick={() => { setCart([]); setPage("orders"); }} className="flex-1 py-6 rounded-2xl font-bold text-white shadow-primary" style={{ background: C.gradPrimary }}>Track My Order</Button>
+          <Button onClick={() => { setCart([]); setPage("orders"); }} className="flex-1 py-6 rounded-2xl font-bold text-white shadow-primary bg-grad-primary">Track My Order</Button>
           <Button variant="secondary" onClick={() => { setCart([]); setPage("home"); }} className="flex-1 py-6 rounded-2xl font-semibold bg-surface-2 text-foreground">Continue Shopping</Button>
         </div>
       </div>
@@ -753,7 +747,7 @@ function CheckoutPage({ cart, setPage, setCart }: any) {
                   <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white font-body font-bold rounded-lg">Upload</Button>
                 </div>
               )}
-              <Button onClick={() => setStep("payment")} className="w-full py-6 rounded-2xl font-bold mt-2 text-white shadow-primary" style={{ background: C.gradPrimary }}>Proceed to Payment</Button>
+              <Button onClick={() => setStep("payment")} className="w-full py-6 rounded-2xl font-bold mt-2 text-white shadow-primary bg-grad-primary">Proceed to Payment</Button>
             </Card>
           )}
           {step === "payment" && (
@@ -773,7 +767,7 @@ function CheckoutPage({ cart, setPage, setCart }: any) {
                   </div>
                 </label>
               ))}
-              <Button onClick={() => setStep("success")} className="w-full py-6 rounded-2xl font-bold mt-2 text-white shadow-primary" style={{ background: C.gradPrimary }}>Pay ₹{total} Now</Button>
+              <Button onClick={() => setStep("success")} className="w-full py-6 rounded-2xl font-bold mt-2 text-white shadow-primary bg-grad-primary">Pay ₹{total} Now</Button>
             </Card>
           )}
         </div>
@@ -851,7 +845,6 @@ function OrdersPage({ setPage, setActiveOrderId }: any) {
 }
 
 function TrackingPage({ orderId, setPage }: any) {
-  const C = useC();
   const order = mockOrders.find((o) => o.id === orderId) ?? mockOrders[1];
   const steps = ["Order Placed", "Payment Verified", "Driver Assigned", "Picked Up", "Delivered"];
   const currentStep = order.status === "picked_up" ? 3 : order.status === "confirmed" ? 2 : 1;
@@ -864,10 +857,10 @@ function TrackingPage({ orderId, setPage }: any) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-2xl overflow-hidden relative h-[360px] bg-sidebar">
           <div className="absolute inset-0 opacity-20" style={{ background: "radial-gradient(circle at top left,#3B2C85 0%,transparent 35%),radial-gradient(circle at bottom center,#4C1D95 0%,transparent 40%),radial-gradient(circle at right,#0F766E 0%,transparent 30%)" }} />
-          <div className="absolute inset-0 opacity-15" style={{ backgroundImage: `linear-gradient(${C.primary}33 1px,transparent 1px),linear-gradient(90deg,${C.primary}33 1px,transparent 1px)`, backgroundSize: "32px 32px" }} />
-          <svg className="absolute inset-0 w-full h-full"><path d="M 10% 80% Q 40% 50% 60% 30% T 90% 10%" stroke={C.primary} strokeWidth="3" strokeDasharray="8,4" fill="none" opacity="0.8" /></svg>
+          <div className="absolute inset-0 opacity-15" style={{ backgroundImage: `linear-gradient(rgba(124,58,237,1)33 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,1)33 1px,transparent 1px)`, backgroundSize: "32px 32px" }} />
+          <svg className="absolute inset-0 w-full h-full"><path d="M 10% 80% Q 40% 50% 60% 30% T 90% 10%" stroke="var(--primary)" strokeWidth="3" strokeDasharray="8,4" fill="none" opacity="0.8" /></svg>
           <div className="absolute animate-pulse left-[40%] top-[40%]">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-primary" style={{ background: C.gradPrimary, boxShadow: `0 0 0 12px rgba(124,58,237,0.2),0 0 30px rgba(124,58,237,0.5)` }}><Truck className="w-6 h-6 text-white" /></div>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-primary bg-grad-primary" style={{ boxShadow: `0 0 0 12px rgba(124,58,237,0.2),0 0 30px rgba(124,58,237,0.5)` }}><Truck className="w-6 h-6 text-white" /></div>
           </div>
           <div className="absolute left-[80%] top-[10%]">
             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-destructive shadow-[0_0_16px_rgba(239,68,68,0.4)]"><MapPin className="w-5 h-5 text-white" /></div>
@@ -888,7 +881,7 @@ function TrackingPage({ orderId, setPage }: any) {
               return (
                 <div key={step} className="flex items-start gap-4">
                   <div className="flex flex-col items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${done ? 'bg-gradient-to-br from-green-400 to-green-600' : isActive ? 'shadow-primary text-white' : 'bg-surface-2'}`} style={isActive ? { background: C.gradPrimary } : {}}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${done ? 'bg-gradient-to-br from-green-400 to-green-600' : isActive ? 'shadow-primary text-white' : 'bg-surface-2'} ${ isActive ? "bg-grad-primary" : "" }`}>
                       {done ? <CheckCircle2 className="w-4 h-4 text-white" /> : isActive ? <div className="w-3 h-3 rounded-full bg-white animate-pulse" /> : <div className="w-3 h-3 rounded-full bg-border" />}
                     </div>
                     {i < steps.length - 1 && <div className={`w-0.5 mt-1 h-7 ${done ? 'bg-green-500/50' : 'bg-border'}`} />}
@@ -908,7 +901,6 @@ function TrackingPage({ orderId, setPage }: any) {
 }
 
 function ChatPage({ setPage }: any) {
-  const C = useC();
   const [messages, setMessages] = useState(chatMessages);
   const [input, setInput] = useState("");
   const send = () => { if (!input.trim()) return; setMessages((prev) => [...prev, { id: prev.length + 1, sender: "customer", name: "You", text: input, time: new Date().toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }) }]); setInput(""); };
@@ -926,7 +918,7 @@ function ChatPage({ setPage }: any) {
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === "customer" ? "justify-end" : "justify-start"}`}>
                 <div className="max-w-[75%]">
-                  <div className={`px-4 py-2.5 font-body text-sm leading-relaxed ${msg.sender === "customer" ? 'text-white rounded-[18px_18px_4px_18px]' : 'bg-surface-2 text-foreground rounded-[18px_18px_18px_4px] border border-border'}`} style={msg.sender === "customer" ? { background: C.gradPrimary } : {}}>{msg.text}</div>
+                  <div className={`px-4 py-2.5 font-body text-sm leading-relaxed ${msg.sender === "customer" ? 'text-white rounded-[18px_18px_4px_18px]' : 'bg-surface-2 text-foreground rounded-[18px_18px_18px_4px] border border-border'} ${ msg.sender === "customer" ? "bg-grad-primary" : "" }`}>{msg.text}</div>
                   <p className={`text-muted-foreground text-[0.65rem] font-body mt-1 ${msg.sender === "customer" ? "text-right" : "text-left"}`}>{msg.time}</p>
                 </div>
               </div>
@@ -935,7 +927,7 @@ function ChatPage({ setPage }: any) {
         </ScrollArea>
         <div className="flex gap-2 px-4 py-3 border-t border-border flex-shrink-0 bg-surface-1/50">
           <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Type a message…" className="flex-1 rounded-xl bg-background border-border text-foreground font-body h-10" />
-          <Button onClick={send} size="icon" className="rounded-xl h-10 w-10 shadow-primary" style={{ background: C.gradPrimary }} aria-label="Send"><Send className="w-4 h-4 text-white" /></Button>
+          <Button onClick={send} size="icon" className="rounded-xl h-10 w-10 shadow-primary bg-grad-primary" aria-label="Send"><Send className="w-4 h-4 text-white" /></Button>
         </div>
       </Card>
     </div>
@@ -943,15 +935,14 @@ function ChatPage({ setPage }: any) {
 }
 
 function ReviewPage({ setPage }: any) {
-  const C = useC();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
   if (submitted) return (
     <div className="page-enter text-center py-16 px-4">
-      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-primary text-white" style={{ background: C.gradPrimary }}><ThumbsUp className="w-8 h-8" /></div>
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-primary text-white bg-grad-primary"><ThumbsUp className="w-8 h-8" /></div>
       <h3 className="text-foreground font-heading font-bold text-xl">Thanks for reviewing!</h3>
-      <Button onClick={() => setPage("orders")} className="mt-5 rounded-2xl font-bold shadow-primary text-white px-8 py-6" style={{ background: C.gradPrimary }}>Back to Orders</Button>
+      <Button onClick={() => setPage("orders")} className="mt-5 rounded-2xl font-bold shadow-primary text-white px-8 py-6 bg-grad-primary">Back to Orders</Button>
     </div>
   );
   return (
@@ -964,18 +955,17 @@ function ReviewPage({ setPage }: any) {
         </div>
         <div className="flex gap-3 justify-center">
           {[1, 2, 3, 4, 5].map((s) => (
-            <button key={s} onClick={() => setRating(s)} aria-label={`Rate ${s} stars`}><Star className="w-10 h-10 transition-transform hover:scale-110 text-yellow-400" style={{ fill: s <= rating ? C.star : "transparent", strokeWidth: 1.5 }} /></button>
+            <button key={s} onClick={() => setRating(s)} aria-label={`Rate ${s} stars`}><Star className="w-10 h-10 transition-transform hover:scale-110 text-yellow-400" style={{ fill: s <= rating ? "var(--accent)" : "transparent", strokeWidth: 1.5 }} /></button>
           ))}
         </div>
         <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Tell us about your experience…" rows={3} className="w-full px-3 py-2.5 rounded-xl outline-none resize-none bg-surface-1 border border-border text-foreground font-body text-sm focus:border-primary focus:ring-1 focus:ring-primary" aria-label="Review comments" />
-        <Button disabled={rating === 0} onClick={() => setSubmitted(true)} className={`w-full py-6 rounded-2xl font-bold transition-all ${rating > 0 ? 'text-white shadow-primary' : 'bg-surface-2 text-muted-foreground'}`} style={rating > 0 ? { background: C.gradPrimary } : {}}>Submit Review</Button>
+        <Button disabled={rating === 0} onClick={() => setSubmitted(true)} className={`w-full py-6 rounded-2xl font-bold transition-all ${rating > 0 ? 'text-white shadow-primary' : 'bg-surface-2 text-muted-foreground'} ${ rating > 0 ? "bg-grad-primary" : "" }`}>Submit Review</Button>
       </Card>
     </div>
   );
 }
 
 function DisputePage({ setPage }: any) {
-  const C = useC();
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -984,7 +974,7 @@ function DisputePage({ setPage }: any) {
       <AlertCircle className="w-12 h-12 mx-auto mb-3 text-orange-500" />
       <h3 className="text-foreground font-heading font-bold text-xl">Dispute Filed</h3>
       <p className="text-muted-foreground font-body mt-2">Our team will review within 24 hours</p>
-      <Button onClick={() => setPage("orders")} className="mt-5 px-8 py-6 rounded-2xl font-bold text-white shadow-primary" style={{ background: C.gradPrimary }}>Back to Orders</Button>
+      <Button onClick={() => setPage("orders")} className="mt-5 px-8 py-6 rounded-2xl font-bold text-white shadow-primary bg-grad-primary">Back to Orders</Button>
     </div>
   );
   return (
@@ -1049,7 +1039,7 @@ const FavouritesView = ({ setActiveSection }: any) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
         {items.map((item) => (
           <Card key={item.id} className="rounded-2xl overflow-hidden bg-background border-border shadow-xs">
-            <div className="relative h-36"><img src={uimg(item.img, 400, 288)} alt={item.name} className="w-full h-full object-cover" /></div>
+            <div className="relative h-36"><img src={uimg(item.img, 400, 288)} alt={item.name} className="w-full h-full object-cover"  loading="lazy" /></div>
             <div className="p-3"><p className="text-foreground font-body font-semibold text-sm">{item.name}</p><p className="text-primary font-heading font-bold text-base mt-1">₹{item.price}</p></div>
           </Card>
         ))}
@@ -1059,7 +1049,6 @@ const FavouritesView = ({ setActiveSection }: any) => {
 };
 
 const SettingsView = ({ setActiveSection, darkMode, setDarkMode }: any) => {
-  const C = useC();
   return (
     <div className="page-enter"><SubHeader title="Settings" setActiveSection={setActiveSection} />
       <div className="space-y-5">
@@ -1081,7 +1070,7 @@ const SettingsView = ({ setActiveSection, darkMode, setDarkMode }: any) => {
             <div><Label className="text-muted-foreground text-xs font-body font-semibold">Phone</Label><Input defaultValue="+1 234 567 8900" className="mt-1 rounded-xl bg-surface-1 border-border font-body" /></div>
             <div><Label className="text-muted-foreground text-xs font-body font-semibold">Email</Label><Input defaultValue="contact@nestigo.com" className="mt-1 rounded-xl bg-surface-1 border-border font-body" /></div>
           </div>
-          <Button className="mt-5 w-full py-6 rounded-xl font-bold text-white shadow-primary" style={{ background: C.gradPrimary }}>Save Changes</Button>
+          <Button className="mt-5 w-full py-6 rounded-xl font-bold text-white shadow-primary bg-grad-primary">Save Changes</Button>
         </Card>
       </div>
     </div>
@@ -1128,7 +1117,6 @@ const ReviewsView = ({ setActiveSection }: any) => {
 };
 
 const ProfilePage = ({ onLogout, darkMode, setDarkMode, setPage }: any) => {
-  const C = useC();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   
   if (activeSection === "addresses") return <div className="max-w-3xl mx-auto px-4 md:px-6 lg:px-8 py-6 pb-24 lg:pb-10"><SavedAddressesView setActiveSection={setActiveSection} /></div>;
@@ -1143,13 +1131,13 @@ const ProfilePage = ({ onLogout, darkMode, setDarkMode, setPage }: any) => {
       <h2 className="text-foreground font-heading font-bold text-2xl mb-6">My Account</h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="space-y-4">
-          <Card className="rounded-2xl p-6 relative overflow-hidden border-none" style={{ background: C.gradHero }}>
-            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `linear-gradient(${C.primary}40 1px,transparent 1px),linear-gradient(90deg,${C.primary}40 1px,transparent 1px)`, backgroundSize: "24px 24px" }} />
-            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: C.grad }} />
+          <Card className="rounded-2xl p-6 relative overflow-hidden border-none bg-grad-hero">
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `linear-gradient(rgba(124,58,237,1)40 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,1)40 1px,transparent 1px)`, backgroundSize: "24px 24px" }} />
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-grad" />
             <div className="relative z-10 flex items-center gap-4 mb-5">
-              <Avatar className="w-16 h-16 rounded-2xl shadow-primary" style={{ background: C.gradPrimary }}><AvatarFallback className="text-white font-heading font-black text-xl bg-transparent">JD</AvatarFallback></Avatar>
+              <Avatar className="w-16 h-16 rounded-2xl shadow-primary bg-grad-primary"><AvatarFallback className="text-white font-heading font-black text-xl bg-transparent">JD</AvatarFallback></Avatar>
               <div>
-                <p className="font-mono font-semibold text-[0.62rem] tracking-[0.08em]" style={{ background: C.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>NESTIGO GOLD MEMBER</p>
+                <p className="font-mono font-semibold text-[0.62rem] tracking-[0.08em] text-gradient">NESTIGO GOLD MEMBER</p>
                 <h3 className="text-white font-heading font-extrabold text-lg mt-1">Jane Doe</h3>
                 <p className="text-white/60 font-body text-xs mt-0.5">contact@nestigo.com</p>
               </div>
@@ -1167,7 +1155,7 @@ const ProfilePage = ({ onLogout, darkMode, setDarkMode, setPage }: any) => {
             {[ { icon: MapPin, label: "Saved Addresses", sub: "3 locations saved", color: "text-primary", bg: "bg-primary/10", section: "addresses" }, { icon: Heart, label: "Favourites", sub: "6 saved items", color: "text-pink-500", bg: "bg-pink-500/10", section: "favourites" }, { icon: Star, label: "My Reviews", sub: "3 reviews written", color: "text-orange-500", bg: "bg-orange-500/10", section: "reviews" }, { icon: Gift, label: "Refer & Earn", sub: "₹100 per referral", color: "text-green-500", bg: "bg-green-500/10", section: "refer" }, { icon: Package, label: "Order History", sub: "47 total orders", color: "text-cyan-500", bg: "bg-cyan-500/10", page: "orders" }, { icon: Settings, label: "Settings", sub: "Preferences & privacy", color: "text-muted-foreground", bg: "bg-surface-2", section: "settings" } ].map((item: any) => {
               const Icon = item.icon;
               return (
-                <Card key={item.label} onClick={() => item.page ? setPage(item.page) : setActiveSection(item.section)} className="flex items-center gap-3 p-4 rounded-xl text-left transition-all hover-lift cursor-pointer bg-background border-border shadow-xs">
+                <Card role="button" tabIndex={0} key={item.label} onClick={() => item.page ? setPage(item.page) : setActiveSection(item.section)} className="flex items-center gap-3 p-4 rounded-xl text-left transition-all hover-lift cursor-pointer bg-background border-border shadow-xs">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.bg}`}><Icon className={`w-5 h-5 ${item.color}`} /></div>
                   <div className="flex-1"><p className="text-foreground font-body font-bold text-sm">{item.label}</p><p className="text-muted-foreground text-xs font-body mt-0.5">{item.sub}</p></div>
                   <ChevronRight className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
@@ -1195,7 +1183,7 @@ export function CustomerPortal({ onLogout }: { onLogout: () => void }) {
 
   // In order to apply dark mode, we wrap the app in a div that toggles 'dark' class
   return (
-    <DarkCtx.Provider value={darkMode}>
+    <>
       <div className={`min-h-screen font-body text-foreground bg-surface-1 ${darkMode ? "dark" : ""}`}>
         <TopNav activePage={activePage} setPage={navigate} cartCount={cartCount} searchQ={searchQ} setSearchQ={setSearchQ} />
         <main>
@@ -1213,6 +1201,6 @@ export function CustomerPortal({ onLogout }: { onLogout: () => void }) {
         </main>
         <BottomNav active={activePage} setActive={navigate} cartCount={cartCount} />
       </div>
-    </DarkCtx.Provider>
+    </>
   );
 }

@@ -249,7 +249,7 @@ function JobDetailPage({ jobId }: { jobId: string }) {
           </Badge>
         </div>
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="animate-bounce">
+          <div className="animate-fade-in-up">
             <Truck className="w-8 h-8 md:w-10 md:h-10 drop-shadow-md" style={{ color: "#00D4AA" }} />
           </div>
         </div>

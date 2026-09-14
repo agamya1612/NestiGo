@@ -234,7 +234,7 @@ export function PortalShell({
                <SidebarContent />
             </div>
           </div>
-          <div
+          <div role="button" tabIndex={0}
             className="flex-1 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setMobileOpen(false)}
           />
